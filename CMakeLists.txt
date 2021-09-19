@@ -207,9 +207,9 @@ TARGET_INCLUDE_DIRECTORIES (cxxexcept
 TARGET_LINK_LIBRARIES(cxxexcept INTERFACE ${BACKWARD_ENABLE} fmt )
 #ADD_BACKWARD(cxxexcept)
 
-    # # Install the header file and export the target
-    # install(TARGETS cxxopts EXPORT ${targets_export_name} DESTINATION lib)
-    # install(FILES ${PROJECT_SOURCE_DIR}/include/cxxopts.hpp DESTINATION include)
+# # Install the header file and export the target
+#install(TARGETS cxxexcept EXPORT ${targets_export_name} DESTINATION lib)
+install(FILES ${PROJECT_SOURCE_DIR}/cxxexcept/Exception.hpp DESTINATION include)
 
 IF(CXXEXCEPT_BUILD_WITH_TEST)
 	ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/test)
