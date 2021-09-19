@@ -1,5 +1,5 @@
 #include "Exception.hpp"
-#include<iostream>
+#include <iostream>
 
 int main(int argc, const char **argv) {
 	try {
