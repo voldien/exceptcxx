@@ -28,7 +28,7 @@ IF(NOT CXXEXCEPT_BUILD_SHARED_LIBS)
 	SET(LINK_SEARCH_START_STATIC TRUE)
 ELSE()
 	MESSAGE(STATUS "Shared libraries enabled.")
-ENDIF(NOT BUILD_SHARED_LIBS)
+ENDIF(NOT CXXEXCEPT_BUILD_SHARED_LIBS)
 
 #
 OPTION(CXXEXCEPT_BUILD_WITH_TEST "Enable Testing." ON)
@@ -58,7 +58,11 @@ SET(PROJECT_VERSION "${VERSION}")
 # Set predefined macro for version.
 ADD_DEFINITIONS(-DCXXE_VERSION="${VERSION}")
 
-IF(NOT CXXEXCEPT_IGNORE_GIT_HASH)
+FIND_PACKAGE(Git QUIET)
+IF(GIT_FOUND)
+	MESSAGE(STATUS "git found: ${GIT_EXECUTABLE} -- ${GIT_VERSION_STRING}")
+ENDIF()
+IF(NOT CXXEXCEPT_IGNORE_GIT_HASH AND GIT_FOUND)
   # Get the current working branch
   EXECUTE_PROCESS(
 	COMMAND git rev-parse --abbrev-ref HEAD
@@ -185,16 +189,28 @@ IF (BUILD_WITH_UBSAN)
 ENDIF()
 
 
-
-FIND_PACKAGE(Git QUIET)
-
-
-IF(GIT_FOUND)
-	MESSAGE(STATUS "git found: ${GIT_EXECUTABLE} -- ${GIT_VERSION_STRING}")
-ENDIF()
-
 # Inlucde external resources.
 ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/extern/backward-cpp)
+
+
+SET(CXXEXCEPT_SRC
+	${CMAKE_CURRENT_SOURCE_DIR}/cxxexcept/Exception.hpp
+	${CMAKE_CURRENT_SOURCE_DIR}/cxxexcept/IException.cpp
+)
+
+ADD_LIBRARY(cxxexcept INTERFACE )
+TARGET_INCLUDE_DIRECTORIES (cxxexcept
+	INTERFACE
+	${BACKWARD_INCLUDE_DIRS}
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/cxxexcept>
+	$<INSTALL_INTERFACE:cxxexcept>
+)
+TARGET_LINK_LIBRARIES(cxxexcept INTERFACE ${BACKWARD_ENABLE} fmt )
+#ADD_BACKWARD(cxxexcept)
+
+    # # Install the header file and export the target
+    # install(TARGETS cxxopts EXPORT ${targets_export_name} DESTINATION lib)
+    # install(FILES ${PROJECT_SOURCE_DIR}/include/cxxopts.hpp DESTINATION include)
 
 # Generate sample executables.
 IF(BUILD_WITH_SAMPLES)
