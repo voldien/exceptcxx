@@ -1,4 +1,4 @@
-name: Window Build
+name: CxxExecpt - Window Build
 on: [push,pull_request]
 
 env:
@@ -13,7 +13,9 @@ jobs:
     name: Core
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
+        with:
+          submodules: "recursive"
 
     - name: Create Build Environment
       # Some projects don't allow in-source building, so create a separate build directory
@@ -29,8 +31,9 @@ jobs:
       # and build directories, but this is only available with CMake 3.13 and higher.  
       # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
       run: |
-        cmake $GITHUB_WORKSPACE -G "Visual Studio 16 2019" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_WITH_TEST=ON \
-        -DBUILD_WITH_INSTALL=OFF -DBUILD_WITH_UBSAN=ON -DBUILD_WITH_ASAN=ON -DBUILD_WITH_COVERAGE=ON
+        cmake $GITHUB_WORKSPACE -G "Visual Studio 16 2019" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCXXEXCEPT_BUILD_WITH_UBSAN=ON \
+          -DCXXEXCEPT_BUILD_WITH_ASAN=ON -DCXXEXCEPT_BUILD_WITH_INSTALL=OFF -DCXXEXCEPT_BUILD_OPT_BUILD_PACKAGES=ON \
+          -DCXXEXCEPT_BUILD_WITH_TEST=ON 
      
     - name: Build-Core
       working-directory: ${{runner.workspace}}/build

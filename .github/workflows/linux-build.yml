@@ -1,4 +1,4 @@
-name: Linux Build
+name: CxxExecpt - Linux Build
 on: [push, pull_request]
 
 env:
@@ -16,12 +16,7 @@ jobs:
       - name: Configure dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install pkg-config libjson-c-dev libxml2-dev libyaml-dev libsdl2-dev \
-          fswatch libfreeimage-dev libavcodec-dev libavfilter-dev libavformat-dev libfreetype6-dev libssl-dev
-          sudo apt-get install libsdl2-dev libglew-dev libvulkan-dev libgl1-mesa-dev opencl-headers \
-          libgtest-dev libsubunit-dev qt5-default libassimp-dev glslang-tools libogg-dev libopus-dev libvorbis-dev \
-          libzip-dev libbullet-dev libopenal-dev mesa-common-dev libgtk-3-dev ocl-icd-opencl-dev libnoise-dev libvdpau-dev \
-          libalut-dev libspdlog-dev libbz2-dev
+          sudo apt-get install cmake g++
 
       - name: Create Build Environment
         # Some projects don't allow in-source building, so create a separate build directory
@@ -37,10 +32,10 @@ jobs:
         # and build directories, but this is only available with CMake 3.13 and higher.
         # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
         run: |
-          cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_WITH_TEST=ON -DBUILD_WITH_UBSAN=ON \
-          -DBUILD_WITH_ASAN=ON -DBUILD_WITH_TEST=ON -DBUILD_WITH_INSTALL=OFF -DBUILD_WITH_COVERAGE=ON -DBUILD_OPT_BUILD_PACKAGES=ON
+          cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCXXEXCEPT_BUILD_WITH_TEST=ON -DCXXEXCEPT_BUILD_WITH_UBSAN=ON \
+          -DCXXEXCEPT_BUILD_WITH_ASAN=ON -DCXXEXCEPT_BUILD_WITH_INSTALL=OFF -DCXXEXCEPT_BUILD_OPT_BUILD_PACKAGES=ON
 
-      - name: Build-Core
+      - name: Build Library
         working-directory: ${{runner.workspace}}/build
         shell: bash
         # Execute the build.  You can specify a specific target with "--target <NAME>"
