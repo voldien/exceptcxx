@@ -17,7 +17,6 @@
 */
 #ifndef _EXECPT_CXX_IEXCEPTION_H_
 #define _EXECPT_CXX_IEXCEPTION_H_ 1
-#include "../Def.h"
 #include <fmt/format.h>
 #include <stdexcept>
 
@@ -27,7 +26,7 @@ namespace execptcxx {
 	 * @brief
 	 *
 	 */
-	class FVDECLSPEC IException : public std::exception {
+	class IException : public std::exception {
 	  public:
 		IException(void);
 		IException(const char *what);

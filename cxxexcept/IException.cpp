@@ -1,8 +1,8 @@
-#include "Exception/IException.h"
+#include "IException.h"
 #include <backward.hpp>
 #include <execinfo.h>
 #include <sstream>
-using namespace fragcore;
+using namespace execptcxx;
 using namespace backward;
 
 IException::IException(void) { this->generateStackTrace(); }
