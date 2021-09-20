@@ -95,11 +95,6 @@ SET(LIBCXXEXCEPT-DEV_COMPONENT "LIBCXXEXCEPT{VERSION_MAJOR}.${VERSION_MINOR}.${V
 
 SET(CPACK_COMPONENTS_ALL ${LIBCXXEXCEPT_COMPONENT} ${LIBCXXEXCEPT-DEV_COMPONENT} )
 
-# Project uses C++17
-SET(CMAKE_CXX_STANDARD 17)
-SET(CMAKE_CXX_STANDARD_REQUIRED ON)
-SET(CMAKE_CXX_EXTENSIONS OFF)
-
 # Compiler toolchain
 IF(CMAKE_COMPILER_IS_GNUCC)
 	OPTION(WITH_LINKER_GOLD "Use ld.gold linker which is usually faster than ld.bfd" ON)
@@ -114,7 +109,7 @@ IF((CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX) AND NOT CMAKE_COMPILER_
 		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 	ENDIF()
 
-	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -Wpedantic -Wextra  -Wall -Wno-attributes -std=c++17")
+	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -Wpedantic -Wextra  -Wall -Wno-attributes")
 
 	IF (CMAKE_BUILD_TYPE STREQUAL "Release")
 		MESSAGE(STATUS "Compile for release.")
@@ -197,7 +192,13 @@ SET(CXXEXCEPT_SRC
 	${CMAKE_CURRENT_SOURCE_DIR}/cxxexcept/IException.cpp
 )
 
-ADD_LIBRARY(cxxexcept INTERFACE )
+ADD_LIBRARY(cxxexcept INTERFACE)
+
+# Required c++ features - use to determine what C++ version is required
+TARGET_COMPILE_FEATURES(cxxexcept INTERFACE cxx_constexpr cxx_noexcept cxx_override
+	cxx_sizeof_member cxx_static_assert cxx_decltype cxx_defaulted_functions
+	cxx_default_function_template_args)
+
 TARGET_INCLUDE_DIRECTORIES (cxxexcept
 	INTERFACE
 	${BACKWARD_INCLUDE_DIRS}
