@@ -59,6 +59,8 @@ namespace cxxexcept {
 	// std::basic_string<Char>
 	// typename Char
 	template <class T, class Text = String> class Exception : public std::exception {
+		static_assert(std::is_base_of<std::string, Text>::value, "");
+
 	  protected:
 		Exception(void) {
 			// TODO save the start address to start stacking from.
@@ -81,6 +83,10 @@ namespace cxxexcept {
 
 		virtual const char *what() const noexcept override { return stackTrace.c_str(); }
 		const char *getStackTree(unsigned int stackDepth = 10) const noexcept { return stackTrace.c_str(); }
+
+		friend std::istream &operator>>(std::istream &is, Exception &t) {}
+
+		friend std::ostream &operator<<(std::ostream &os, const Exception &t) {}
 
 		/**
 		 * @brief
