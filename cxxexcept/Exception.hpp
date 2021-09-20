@@ -47,18 +47,40 @@
 namespace cxxexcept {
 	using namespace backward;
 
+
+
 	// TODO add verison value.
 
+	// TODO check if need to handle unicode, locale and etc.
 	typedef std::string String;
 	typedef std::wstring WString;
 
+#ifdef _CXXEXCEPT_USE_UNICODE
+	typedef WString ExceptionString;
+#else
+	typedef String ExceptionString;
+#endif
+
 	// class Exception;
 
-	class Throwable {};
+	class ThrowableException {
+		enum StackColorPalette {
+
+		};
+
+		template <class U> static const char *getExceptionName() noexcept { return typeid(U).name(); }
+
+		template <class U> static std::ostream &printStackMessage(const U &ex) noexcept {
+			std::cout << ex.what() << ex.getStackTree();
+		}
+		template <class U> static void printStackMessage(const U &ex) noexcept {
+			std::cout << ex.what() << ex.getStackTree();
+		}
+	};
 
 	// std::basic_string<Char>
 	// typename Char
-	template <class T, class Text = String> class Exception : public std::exception {
+	template <class T, class Text = ExceptionString> class Exception : public std::exception {
 		static_assert(std::is_base_of<std::string, Text>::value, "");
 
 	  protected:
@@ -93,11 +115,11 @@ namespace cxxexcept {
 		 *
 		 * @return const char*
 		 */
-		const char *fillStackSource(void) const { return ""; }
-		// const Text &fillStackSource(void) const { return this->stackTrace; }
+		const char *fillStackSource() const { return ""; }
+		// const Text &fillStackSource() const { return this->stackTrace; }
 
-		//	virtual const char *getName(void) const noexcept = 0;
-		constexpr const char *getName(void) const noexcept {
+		//	virtual const char *getName() const noexcept = 0;
+		constexpr const char *getName() const noexcept {
 			return "";
 			// getExceptionName(*this);
 		}
@@ -161,7 +183,7 @@ namespace cxxexcept {
 		 * @return Text
 		 */
 		// TODO: implement getcommandline
-		Text getCommandLine(void) const noexcept {
+		Text getCommandLine() const noexcept {
 
 			std::string c(4096);
 			// std::ifstream("/proc/self/cmdline").read(c, c.size());
@@ -172,11 +194,11 @@ namespace cxxexcept {
 		Text message;
 	};
 
-	class ThrowableException : public Exception<int> {};
+	// class ThrowableException : public Exception<int> {};
 
 	class RuntimeException : public Exception<int> {
 	  public:
-		RuntimeException(void) : Exception("Not implemented yet!") {}
+		RuntimeException() : Exception("Not implemented yet!") {}
 		RuntimeException(RuntimeException &&other) = default;
 		RuntimeException(const std::string &arg) : Exception(arg) {}
 		template <typename... Args>
@@ -186,7 +208,7 @@ namespace cxxexcept {
 
 	class PermissionDeniedException : public Exception<int> {
 	  public:
-		PermissionDeniedException(void) : Exception("PermissionDeniedException!") {}
+		PermissionDeniedException() : Exception("PermissionDeniedException!") {}
 
 		PermissionDeniedException(const std::string &arg) : Exception(arg) {}
 		template <typename... Args>
@@ -207,6 +229,7 @@ namespace cxxexcept {
 	class NotSupportedException : public Exception<int> {};
 	class IndexOutOfRangeException : public Exception<int> {};
 	class InvalidPointerException : public Exception<int> {};
+	//using enable_if_t = typename std::enable_if<B, T>::type;
 	typedef Exception<int> CaptureException;
 
 } // namespace cxxexcept
