@@ -25,6 +25,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <typeinfo>
 
 #include <bfd.h>
@@ -47,8 +48,6 @@
 namespace cxxexcept {
 	using namespace backward;
 
-
-
 	// TODO add verison value.
 
 	// TODO check if need to handle unicode, locale and etc.
@@ -59,6 +58,7 @@ namespace cxxexcept {
 	typedef WString ExceptionString;
 #else
 	typedef String ExceptionString;
+
 #endif
 
 	// class Exception;
@@ -79,9 +79,10 @@ namespace cxxexcept {
 	};
 
 	// std::basic_string<Char>
+	// std::basic_string<Char>
 	// typename Char
 	template <class T, class Text = ExceptionString> class Exception : public std::exception {
-		static_assert(std::is_base_of<std::string, Text>::value, "");
+		static_assert(std::is_object<Text>::value, "");
 
 	  protected:
 		Exception(void) {
@@ -229,7 +230,7 @@ namespace cxxexcept {
 	class NotSupportedException : public Exception<int> {};
 	class IndexOutOfRangeException : public Exception<int> {};
 	class InvalidPointerException : public Exception<int> {};
-	//using enable_if_t = typename std::enable_if<B, T>::type;
+	// using enable_if_t = typename std::enable_if<B, T>::type;
 	typedef Exception<int> CaptureException;
 
 } // namespace cxxexcept
