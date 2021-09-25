@@ -189,7 +189,6 @@ ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/extern/backward-cpp)
 
 SET(CXXEXCEPT_SRC
 	${CMAKE_CURRENT_SOURCE_DIR}/cxxexcept/Exception.hpp
-	${CMAKE_CURRENT_SOURCE_DIR}/cxxexcept/IException.cpp
 )
 
 ADD_LIBRARY(cxxexcept INTERFACE)
@@ -206,7 +205,6 @@ TARGET_INCLUDE_DIRECTORIES (cxxexcept
 	$<INSTALL_INTERFACE:cxxexcept>
 )
 TARGET_LINK_LIBRARIES(cxxexcept INTERFACE ${BACKWARD_ENABLE} fmt )
-#ADD_BACKWARD(cxxexcept)
 
 # # Install the header file and export the target
 #install(TARGETS cxxexcept EXPORT ${targets_export_name} DESTINATION lib)
