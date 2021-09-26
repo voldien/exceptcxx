@@ -200,11 +200,10 @@ TARGET_COMPILE_FEATURES(cxxexcept INTERFACE cxx_constexpr cxx_noexcept cxx_overr
 
 TARGET_INCLUDE_DIRECTORIES (cxxexcept
 	INTERFACE
-	${BACKWARD_INCLUDE_DIRS}
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/cxxexcept>
 	$<INSTALL_INTERFACE:cxxexcept>
 )
-TARGET_LINK_LIBRARIES(cxxexcept INTERFACE ${BACKWARD_ENABLE} fmt )
+TARGET_LINK_LIBRARIES(cxxexcept INTERFACE backward fmt dl bfd)
 
 # # Install the header file and export the target
 #install(TARGETS cxxexcept EXPORT ${targets_export_name} DESTINATION lib)
