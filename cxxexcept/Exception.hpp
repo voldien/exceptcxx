@@ -31,7 +31,7 @@
 #include <bfd.h>
 #define BACKWARD_HAS_BFD 1
 #define BACKWARD_HAS_UNWIND 1
-#define BACKWARD_HAS_BACKTRACE_SYMBOL 1
+//#define BACKWARD_HAS_BACKTRACE_SYMBOL 1
 #include <backward.hpp>
 #ifdef CXXEXCEPT_USE_BACKWARD
 
@@ -225,11 +225,39 @@ namespace cxxexcept {
 	class DivideByZeroException : public Exception<int> {};
 	class IOException : public Exception<int> {};
 	class PermissionException : public Exception<int> {};
-	class InvalidArgumentException : public Exception<int> {};
+	class InvalidArgumentException : public Exception<int> {
+	  public:
+		InvalidArgumentException() : Exception("Invalid Argument!") {}
+		InvalidArgumentException(InvalidArgumentException &&other) = default;
+		InvalidArgumentException(const std::string &arg) : Exception(arg) {}
+		template <typename... Args>
+		InvalidArgumentException(const std::string &format, Args &&... args) : Exception(format, args...) {}
+	};
 	class NotImplementedException : public Exception<int> {};
-	class NotSupportedException : public Exception<int> {};
-	class IndexOutOfRangeException : public Exception<int> {};
-	class InvalidPointerException : public Exception<int> {};
+	class NotSupportedException : public Exception<int> {
+	  public:
+		NotSupportedException() : Exception("Invalid Argument!") {}
+		NotSupportedException(NotSupportedException &&other) = default;
+		NotSupportedException(const std::string &arg) : Exception(arg) {}
+		template <typename... Args>
+		NotSupportedException(const std::string &format, Args &&... args) : Exception(format, args...) {}
+	};
+	class IndexOutOfRangeException : public Exception<int> {
+	  public:
+		IndexOutOfRangeException() : Exception("IndexOutOfRangeException") {}
+		IndexOutOfRangeException(IndexOutOfRangeException &&other) = default;
+		IndexOutOfRangeException(const std::string &arg) : Exception(arg) {}
+		template <typename... Args>
+		IndexOutOfRangeException(const std::string &format, Args &&... args) : Exception(format, args...) {}
+	};
+	class InvalidPointerException : public Exception<int> {
+	  public:
+		InvalidPointerException() : Exception("IndexOutOfRangeException") {}
+		InvalidPointerException(InvalidPointerException &&other) = default;
+		InvalidPointerException(const std::string &arg) : Exception(arg) {}
+		template <typename... Args>
+		InvalidPointerException(const std::string &format, Args &&... args) : Exception(format, args...) {}
+	};
 	// using enable_if_t = typename std::enable_if<B, T>::type;
 	typedef Exception<int> CaptureException;
 
