@@ -19,18 +19,20 @@
 #ifndef _CXX_EXECPT_CXX_H_
 #define _CXX_EXECPT_CXX_H_ 1
 
+#include <bfd.h>
+#include <cstdlib>
+#include <cxxabi.h>
 #include <errno.h>
 #include <execinfo.h>
 #include <fmt/format.h>
 #include <limits>
+#include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <string.h>
 #include <string>
 #include <type_traits>
 #include <typeinfo>
-
-#include <bfd.h>
 #define BACKWARD_HAS_BFD 1
 #define BACKWARD_HAS_UNWIND 1
 //#define BACKWARD_HAS_BACKTRACE_SYMBOL 1
@@ -64,25 +66,50 @@ namespace cxxexcept {
 #endif
 
 	class ThrowableException : public std::exception {
+	  public:
+		ThrowableException() {}
+
 		enum StackColorPalette {
 
 		};
 
-		
-		
+		const char *getExceptionName() const noexcept { return typeid(*this).name(); }
 
-		template <class U> static const char *getExceptionName() noexcept { return typeid(U).name(); }
+	  public:
+		// template <class U> static const char *getExceptionName() noexcept { return typeid(U).name(); }
 
-		template <class U> static std::ostream &printStackMessage(const U &ex) noexcept {
-			std::cout << ex.what() << ex.getStackTree();
+
+
+		/// proc/self/cmdline
+		// GetCommandLineA
+		/**
+		 * @brief Get the Command Line object
+		 *
+		 * @return Text
+		 */
+		// TODO: implement getcommandline
+		static std::string getCommandLine() noexcept {
+
+			// std::string c(4096);
+			// std::ifstream("/proc/self/cmdline").read(c, c.size());
+			// return c;
 		}
-		template <class U> static void printStackMessage(const U &ex) noexcept {
-			std::cout << ex.what() << ex.getStackTree();
-		}
+
+	  private:
 	};
 
 	// class Exception;
 	template <typename Text = ExceptionString> class ExceptionBase : public ThrowableException {
+
+		virtual Text getName() const {
+			const char *className = abi::__cxa_demangle(getExceptionName(), nullptr, nullptr, nullptr);
+			Text strName(className);
+			free((void *)className);
+			return strName;
+		}
+
+		virtual const Text &getBackTrace() const = 0;
+		virtual Text getStackTree(unsigned int stackDepth) const noexcept = 0;
 
 	  private:
 		Text text;
@@ -91,35 +118,36 @@ namespace cxxexcept {
 	// std::basic_string<Char>
 	// std::basic_string<Char>
 	// typename Char
-	template <class T, class Text = ExceptionString> class Exception : public std::exception {
+	template <class T, class Text = ExceptionString> class StackException : public ExceptionBase<ExceptionString> {
 		static_assert(std::is_object<Text>::value, "");
 
 	  protected:
-		Exception(void) {
+		StackException() {
 			// TODO save the start address to start stacking from.
 			generateStackTrace(32);
 		}
 
 	  public:
-		Exception(const char *what) : Exception(std::move(Text(what))) {}
-		Exception(const Text &what) : Exception() { message = what; }
-		Exception(Text &&what) : Exception() { message = what; }
+		StackException(const char *what) : StackException(std::move(Text(what))) {}
+		StackException(const Text &what) : StackException() { message = what; }
+		StackException(Text &&what) : StackException() { message = what; }
 		template <typename... Args>
-		Exception(const Text &format, Args &&... args) : Exception(std::move(fmt::format(format, args...))) {}
+		StackException(const Text &format, Args &&... args) : StackException(std::move(fmt::format(format, args...))) {}
 
-		Exception(const Exception &) = default;
-		Exception &operator=(const Exception &) = default;
-		Exception(Exception &&) = default;
-		Exception &operator=(Exception &&) = default;
+		StackException(const StackException &) = default;
+		StackException &operator=(const StackException &) = default;
+		StackException(StackException &&) = default;
+		StackException &operator=(StackException &&) = default;
 
-		const Text &getBackTrace(void) const;
+		virtual const char *what() const noexcept override { return message.c_str(); }
 
-		virtual const char *what() const noexcept override { return stackTrace.c_str(); }
-		const char *getStackTree(unsigned int stackDepth = 10) const noexcept { return stackTrace.c_str(); }
+		virtual const Text &getBackTrace() const override {}
 
-		friend std::istream &operator>>(std::istream &is, Exception &t) {}
+		Text getStackTree(unsigned int stackDepth) const noexcept { return Text(stackTrace.c_str()); }
 
-		friend std::ostream &operator<<(std::ostream &os, const Exception &t) {}
+		friend std::istream &operator>>(std::istream &is, StackException &t) {}
+
+		friend std::ostream &operator<<(std::ostream &os, const StackException &t) {}
 
 		/**
 		 * @brief
@@ -129,16 +157,7 @@ namespace cxxexcept {
 		const char *fillStackSource() const { return ""; }
 		// const Text &fillStackSource() const { return this->stackTrace; }
 
-		//	virtual const char *getName() const noexcept = 0;
-		constexpr const char *getName() const noexcept {
-			return "";
-			// getExceptionName(*this);
-		}
 
-		template <class U> static const char *getExceptionName() noexcept { return typeid(U).name(); }
-		template <class U> static void printStackMessage(const U &ex) noexcept {
-			std::cout << ex.what() << ex.getStackTree();
-		}
 
 	  protected:
 		// TODO add relative source path or just filename path.
@@ -185,20 +204,14 @@ namespace cxxexcept {
 			this->stackTrace = std::move(ss.str());
 		}
 
-	  public:
-		/// proc/self/cmdline
-		// GetCommandLineA
-		/**
-		 * @brief Get the Command Line object
-		 *
-		 * @return Text
-		 */
-		// TODO: implement getcommandline
-		Text getCommandLine() const noexcept {
-
-			std::string c(4096);
-			// std::ifstream("/proc/self/cmdline").read(c, c.size());
-		}
+		public:
+		  template <class U> static std::ostream &printStackMessage(const U &ex, std::ostream &o) noexcept {
+			  o << ex.what() << ex.getStackTree();
+		  }
+		  template <class U> static void printStackMessage(const U &ex) noexcept {
+			  printStackMessage(ex, std::cout);
+			  std::cout << ex.what() << ex.getStackTree();
+		  }
 
 	  private:
 		Text stackTrace;
@@ -207,80 +220,85 @@ namespace cxxexcept {
 
 	// class ThrowableException : public Exception<int> {};
 
-	class RuntimeException : public Exception<int> {
+	class RuntimeException : public StackException<int> {
 	  public:
-		RuntimeException() : Exception("Not implemented yet!") {}
+		RuntimeException() : StackException("Not implemented yet!") {}
 		RuntimeException(RuntimeException &&other) = default;
-		RuntimeException(const std::string &arg) : Exception(arg) {}
+		RuntimeException(const std::string &arg) : StackException(arg) {}
 		template <typename... Args>
-		RuntimeException(const std::string &format, Args &&... args) : Exception(format, args...) {}
-		//	virtual const char *getName(void) const noexcept override { return getExceptionName(); }
+		RuntimeException(const std::string &format, Args &&... args) : StackException(format, args...) {}
 	};
 
-	class PermissionDeniedException : public Exception<int> {
+	class PermissionDeniedException : public StackException<int> {
 	  public:
-		PermissionDeniedException() : Exception("PermissionDeniedException!") {}
+		PermissionDeniedException() : StackException("PermissionDeniedException!") {}
 
-		PermissionDeniedException(const std::string &arg) : Exception(arg) {}
+		PermissionDeniedException(const std::string &arg) : StackException(arg) {}
 		template <typename... Args>
-		PermissionDeniedException(const std::string &format, Args &&... args) : Exception(format, args...) {}
-		// virtual const char *getName(void) const noexcept override { return getExceptionName(); }
+		PermissionDeniedException(const std::string &format, Args &&... args) : StackException(format, args...) {}
 	};
 
 	/**
 	 * @brief
 	 *
 	 */
-	class ErrnoException : public Exception<int> {};
-	class DivideByZeroException : public Exception<int> {};
-	class IOException : public Exception<int> {};
-	class PermissionException : public Exception<int> {};
-	class InvalidArgumentException : public Exception<int> {
+	class ErrnoException : public StackException<int> {};
+	class DivideByZeroException : public StackException<int> {};
+	class IOException : public StackException<int> {};
+	class PermissionException : public StackException<int> {};
+	class InvalidArgumentException : public StackException<int> {
 	  public:
-		InvalidArgumentException() : Exception("Invalid Argument!") {}
+		InvalidArgumentException() : StackException("Invalid Argument!") {}
 		InvalidArgumentException(InvalidArgumentException &&other) = default;
-		InvalidArgumentException(const std::string &arg) : Exception(arg) {}
+		InvalidArgumentException(const std::string &arg) : StackException(arg) {}
 		template <typename... Args>
-		InvalidArgumentException(const std::string &format, Args &&... args) : Exception(format, args...) {}
+		InvalidArgumentException(const std::string &format, Args &&... args) : StackException(format, args...) {}
 	};
-	class NotImplementedException : public Exception<int> {};
-	class NotSupportedException : public Exception<int> {
+	class NotImplementedException : public StackException<int> {};
+	class NotSupportedException : public StackException<int> {
 	  public:
-		NotSupportedException() : Exception("Invalid Argument!") {}
+		NotSupportedException() : StackException("Invalid Argument!") {}
 		NotSupportedException(NotSupportedException &&other) = default;
-		NotSupportedException(const std::string &arg) : Exception(arg) {}
+		NotSupportedException(const std::string &arg) : StackException(arg) {}
 		template <typename... Args>
-		NotSupportedException(const std::string &format, Args &&... args) : Exception(format, args...) {}
+		NotSupportedException(const std::string &format, Args &&... args) : StackException(format, args...) {}
 	};
-	class IndexOutOfRangeException : public Exception<int> {
+	class IndexOutOfRangeException : public StackException<int> {
 	  public:
-		IndexOutOfRangeException() : Exception("IndexOutOfRangeException") {}
+		IndexOutOfRangeException() : StackException("IndexOutOfRangeException") {}
 		IndexOutOfRangeException(IndexOutOfRangeException &&other) = default;
-		IndexOutOfRangeException(const std::string &arg) : Exception(arg) {}
+		IndexOutOfRangeException(const std::string &arg) : StackException(arg) {}
 		template <typename... Args>
-		IndexOutOfRangeException(const std::string &format, Args &&... args) : Exception(format, args...) {}
+		IndexOutOfRangeException(const std::string &format, Args &&... args) : StackException(format, args...) {}
 	};
-	class InvalidPointerException : public Exception<int> {
+	class InvalidPointerException : public StackException<int> {
 	  public:
-		InvalidPointerException() : Exception("IndexOutOfRangeException") {}
+		InvalidPointerException() : StackException("IndexOutOfRangeException") {}
 		InvalidPointerException(InvalidPointerException &&other) = default;
-		InvalidPointerException(const std::string &arg) : Exception(arg) {}
+		InvalidPointerException(const std::string &arg) : StackException(arg) {}
 		template <typename... Args>
-		InvalidPointerException(const std::string &format, Args &&... args) : Exception(format, args...) {}
+		InvalidPointerException(const std::string &format, Args &&... args) : StackException(format, args...) {}
 	};
-	
-	//TODO determine if shall be renamed 
-	class SystemException : public Exception<int> {
+
+	// TODO determine if shall be renamed
+	class SystemException : public StackException<int> {
 	  public:
 		SystemException() : SystemException(errno) {}
-		SystemException(int err) : Exception(strerror(errno)) {}
+		SystemException(int err) : StackException(strerror(errno)) {}
 		SystemException(SystemException &&other) = default;
-		SystemException(const ExceptionString &arg) : Exception(arg) {}
+		SystemException(const ExceptionString &arg) : StackException(arg) {}
 		template <typename... Args>
-		SystemException(const ExceptionString &format, Args &&... args) : Exception(format, args...) {}
+		SystemException(const ExceptionString &format, Args &&... args) : StackException(format, args...) {}
 	};
+
+	template <class U> static const char *getExceptionName() noexcept { return typeid(U).name(); }
+	template <class U> static void printStackMessage(const U &ex) noexcept {
+		std::cout << ex.what();
+		//<< ex.getStackTree();
+	}
+
 	// using enable_if_t = typename std::enable_if<B, T>::type;
-	using CaptureException = Exception<int> ;
+	using CaptureException = ThrowableException;
 
 } // namespace cxxexcept
 
