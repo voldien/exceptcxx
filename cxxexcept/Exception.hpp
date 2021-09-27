@@ -19,11 +19,13 @@
 #ifndef _CXX_EXECPT_CXX_H_
 #define _CXX_EXECPT_CXX_H_ 1
 
+#include <errno.h>
 #include <execinfo.h>
 #include <fmt/format.h>
 #include <limits>
 #include <sstream>
 #include <stdexcept>
+#include <string.h>
 #include <string>
 #include <type_traits>
 #include <typeinfo>
@@ -61,12 +63,13 @@ namespace cxxexcept {
 
 #endif
 
-	// class Exception;
-
-	class ThrowableException {
+	class ThrowableException : public std::exception {
 		enum StackColorPalette {
 
 		};
+
+		
+		
 
 		template <class U> static const char *getExceptionName() noexcept { return typeid(U).name(); }
 
@@ -76,6 +79,13 @@ namespace cxxexcept {
 		template <class U> static void printStackMessage(const U &ex) noexcept {
 			std::cout << ex.what() << ex.getStackTree();
 		}
+	};
+
+	// class Exception;
+	template <typename Text = ExceptionString> class ExceptionBase : public ThrowableException {
+
+	  private:
+		Text text;
 	};
 
 	// std::basic_string<Char>
@@ -258,10 +268,19 @@ namespace cxxexcept {
 		template <typename... Args>
 		InvalidPointerException(const std::string &format, Args &&... args) : Exception(format, args...) {}
 	};
-
-	class SystemException : public Exception<int> {};
+	
+	//TODO determine if shall be renamed 
+	class SystemException : public Exception<int> {
+	  public:
+		SystemException() : SystemException(errno) {}
+		SystemException(int err) : Exception(strerror(errno)) {}
+		SystemException(SystemException &&other) = default;
+		SystemException(const ExceptionString &arg) : Exception(arg) {}
+		template <typename... Args>
+		SystemException(const ExceptionString &format, Args &&... args) : Exception(format, args...) {}
+	};
 	// using enable_if_t = typename std::enable_if<B, T>::type;
-	typedef Exception<int> CaptureException;
+	using CaptureException = Exception<int> ;
 
 } // namespace cxxexcept
 
