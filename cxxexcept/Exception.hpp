@@ -258,6 +258,8 @@ namespace cxxexcept {
 		template <typename... Args>
 		InvalidPointerException(const std::string &format, Args &&... args) : Exception(format, args...) {}
 	};
+
+	class SystemException : public Exception<int> {};
 	// using enable_if_t = typename std::enable_if<B, T>::type;
 	typedef Exception<int> CaptureException;
 
