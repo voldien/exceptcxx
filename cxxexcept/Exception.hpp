@@ -78,8 +78,6 @@ namespace cxxexcept {
 	  public:
 		// template <class U> static const char *getExceptionName() noexcept { return typeid(U).name(); }
 
-
-
 		/// proc/self/cmdline
 		// GetCommandLineA
 		/**
@@ -139,7 +137,7 @@ namespace cxxexcept {
 		StackException(StackException &&) = default;
 		StackException &operator=(StackException &&) = default;
 
-		virtual const char *what() const noexcept override { return message.c_str(); }
+		virtual const char *what() const noexcept override { return stackTrace.c_str(); }
 
 		virtual const Text &getBackTrace() const override {}
 
@@ -156,8 +154,6 @@ namespace cxxexcept {
 		 */
 		const char *fillStackSource() const { return ""; }
 		// const Text &fillStackSource() const { return this->stackTrace; }
-
-
 
 	  protected:
 		// TODO add relative source path or just filename path.
@@ -178,40 +174,43 @@ namespace cxxexcept {
 
 			// stackTrace.skip_n_firsts(4);
 
-			Printer p;
-			p.print(stackTrace);
-
 			// Colorize
 			// ColorMode::always;
 
-			unsigned int offsetTrace = 3;
-			for (std::size_t i = offsetTrace; i < stackTrace.size(); ++i) {
+			// unsigned int offsetTrace = 3;
+			// for (std::size_t i = offsetTrace; i < stackTrace.size(); ++i) {
 
-				ResolvedTrace trace = resolver.resolve(stackTrace[i]);
+			// 	ResolvedTrace trace = resolver.resolve(stackTrace[i]);
 
-				auto snipCode = snip.get_snippet(trace.object_filename, trace.source.line, 5);
+			// 	auto snipCode = snip.get_snippet(trace.object_filename, trace.source.line, 5);
 
-				std::cout << "#" << i << " " << trace.object_filename << " " << trace.object_function << " ["
-						  << trace.addr << "]" << std::endl;
+			// 	std::cout << "#" << i << " " << trace.object_filename << " " << trace.object_function << " ["
+			// 			  << trace.addr << "]" << std::endl;
 
-				//			std::cout << snipCode[trace.idx].second << std::endl;
+			// 	//			std::cout << snipCode[trace.idx].second << std::endl;
 
-				// auto it = snipCode.begin();
-				// for (it; it != snipCode.end(); it++)
-				// 	std::cout << (*it).second << std::endl;
-			}
+			// 	// auto it = snipCode.begin();
+			// 	// for (it; it != snipCode.end(); it++)
+			// 	// 	std::cout << (*it).second << std::endl;
+			// }
 
-			this->stackTrace = std::move(ss.str());
+			// this->stackTrace = std::move(ss.str());
+
+			/*	*/
+			std::ostringstream stream;
+			Printer p;
+			p.print(stackTrace, stream);
+			this->stackTrace = std::move(stream.str());
 		}
 
-		public:
-		  template <class U> static std::ostream &printStackMessage(const U &ex, std::ostream &o) noexcept {
-			  o << ex.what() << ex.getStackTree();
-		  }
-		  template <class U> static void printStackMessage(const U &ex) noexcept {
-			  printStackMessage(ex, std::cout);
-			  std::cout << ex.what() << ex.getStackTree();
-		  }
+	  public:
+		template <class U> static std::ostream &printStackMessage(const U &ex, std::ostream &o) noexcept {
+			o << ex.what() << ex.getStackTree();
+		}
+		template <class U> static void printStackMessage(const U &ex) noexcept {
+			printStackMessage(ex, std::cout);
+			std::cout << ex.what() << ex.getStackTree();
+		}
 
 	  private:
 		Text stackTrace;
@@ -293,7 +292,17 @@ namespace cxxexcept {
 
 	template <class U> static const char *getExceptionName() noexcept { return typeid(U).name(); }
 	template <class U> static void printStackMessage(const U &ex) noexcept {
-		std::cout << ex.what();
+		// static_assert(std::is_base_of<std::execption, U>::value, "");
+		const ThrowableException *throwEx = dynamic_cast<const ThrowableException *>(&ex);
+
+		/**/
+		if (throwEx) {
+			std::cout << throwEx->getExceptionName();
+			std::cout << throwEx->what();
+		} else {
+			/*	A normal std::exception.	*/
+			std::cerr << ex.what();
+		}
 		//<< ex.getStackTree();
 	}
 
