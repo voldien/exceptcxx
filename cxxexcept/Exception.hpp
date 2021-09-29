@@ -93,6 +93,8 @@ namespace cxxexcept {
 			// return c;
 		}
 
+		friend std::ostream &operator<<(std::ostream &out, const ThrowableException &c);
+
 	  private:
 	};
 
@@ -291,20 +293,26 @@ namespace cxxexcept {
 	};
 
 	template <class U> static const char *getExceptionName() noexcept { return typeid(U).name(); }
-	template <class U> static void printStackMessage(const U &ex) noexcept {
-		// static_assert(std::is_base_of<std::execption, U>::value, "");
-		const ThrowableException *throwEx = dynamic_cast<const ThrowableException *>(&ex);
 
-		/**/
+	template <class U> static std::string getStackMessage(const U &ex) noexcept {
+		static_assert(std::is_base_of<std::exception, U>::value, "Class Must be derived from std::exception");
+		const ThrowableException *throwEx = dynamic_cast<const ThrowableException *>(&ex);
+		std::ostringstream stream;
+		/*	*/
 		if (throwEx) {
-			std::cout << throwEx->getExceptionName();
-			std::cout << throwEx->what();
+			stream << throwEx->getExceptionName();
+			stream << throwEx->what();
 		} else {
 			/*	A normal std::exception.	*/
-			std::cerr << ex.what();
+			stream << ex.what();
 		}
-		//<< ex.getStackTree();
+
+		return stream.str();
 	}
+
+	template <class T> static void printStackMessage(const T &ex) noexcept { std::cerr << getStackMessage<T>(ex); }
+
+	std::ostream &operator<<(std::ostream &out, const ThrowableException &c) {}
 
 	// using enable_if_t = typename std::enable_if<B, T>::type;
 	using CaptureException = ThrowableException;
