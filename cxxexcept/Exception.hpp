@@ -22,18 +22,19 @@
 #include <bfd.h>
 #include <cstdlib>
 // TODO check if conditional.
+#include <cerrno>
+#include <cstring>
 #include <cxxabi.h>
-#include <errno.h>
 #include <execinfo.h>
 #include <fmt/format.h>
 #include <limits>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
-#include <string.h>
 #include <string>
 #include <type_traits>
 #include <typeinfo>
+
 #define BACKWARD_HAS_BFD 1
 #define BACKWARD_HAS_UNWIND 1
 //#define BACKWARD_HAS_BACKTRACE_SYMBOL 1
@@ -46,6 +47,13 @@
 #ifdef __cpp_lib_optional
 #include <optional>
 #define CXXEXCEPT_HAS_OPTIONAL
+#endif
+
+#if defined(__linux) || defined(__linux__)
+#include <unistd.h>
+#endif
+
+#ifdef __ANDROID__
 #endif
 
 //#include <unicode/unistr.h>
@@ -70,6 +78,11 @@ namespace cxxexcept {
 	  public:
 		ThrowableException() {}
 
+		ThrowableException(const ThrowableException &) = default;
+		ThrowableException &operator=(const ThrowableException &) = default;
+		ThrowableException(ThrowableException &&) = default;
+		ThrowableException &operator=(ThrowableException &&) = default;
+
 		enum StackColorPalette {
 
 		};
@@ -77,8 +90,6 @@ namespace cxxexcept {
 		const char *getExceptionName() const noexcept { return typeid(*this).name(); }
 
 	  public:
-		// template <class U> static const char *getExceptionName() noexcept { return typeid(U).name(); }
-
 		/// proc/self/cmdline
 		// GetCommandLineA
 		/**
@@ -87,14 +98,14 @@ namespace cxxexcept {
 		 * @return Text
 		 */
 		// TODO: implement getcommandline
-		static std::string getCommandLine() noexcept {
-
-			// std::string c(4096);
+		static String getCommandLine() noexcept {
+			String c;
 			// std::ifstream("/proc/self/cmdline").read(c, c.size());
-			// return c;
+			return c;
 		}
+		static String getEnviornmentVariables() noexcept { return ""; }
 
-		friend std::ostream &operator<<(std::ostream &out, const ThrowableException &c);
+		friend ThrowableException &operator>>(ThrowableException &ex, String &text) { return ex; }
 
 	  private:
 	};
@@ -109,23 +120,53 @@ namespace cxxexcept {
 			return strName;
 		}
 
-		virtual const Text &getBackTrace() const = 0;
-		virtual Text getStackTree(unsigned int stackDepth) const noexcept = 0;
+		// virtual const Text &getBackTrace() const = 0;
+		// virtual Text getStackTree(unsigned int stackDepth) const noexcept = 0;
 
 	  private:
 		Text text;
 	};
 
+	template <class Text> class IExceptionBackTrace {
+	  public:
+		IExceptionBackTrace() {}
+
+		IExceptionBackTrace(const IExceptionBackTrace &) = default;
+		IExceptionBackTrace &operator=(const IExceptionBackTrace &) = default;
+		IExceptionBackTrace(IExceptionBackTrace &&) = default;
+		IExceptionBackTrace &operator=(IExceptionBackTrace &&) = default;
+
+		virtual const Text &getBackTrace() const { return getStackTree(-1); }
+
+		virtual Text getStackTree(int stackDepth) const noexcept {
+			/*	Extract stack.	*/
+			TraceResolver resolver;
+			StackTrace stackTrace;
+			int si = stackTrace.load_here(stackDepth);
+			resolver.load_stacktrace(stackTrace);
+
+			/*	Generate the print message.	*/
+			std::ostringstream stream;
+			Printer p;
+			p.print(stackTrace, stream);
+			String stackTraceStr = std::move(stream.str());
+			return stackTraceStr;
+		}
+
+	  private:
+	};
+
 	// std::basic_string<Char>
 	// std::basic_string<Char>
 	// typename Char
-	template <class T, class Text = ExceptionString> class StackException : public ExceptionBase<ExceptionString> {
+	template <class T, class Text = ExceptionString, class BackTrace = IExceptionBackTrace<Text>>
+	class StackException : public ExceptionBase<ExceptionString>, public BackTrace {
 		static_assert(std::is_object<Text>::value, "");
+		// TODO assert the backstrace impl class typr and etc.
 
 	  protected:
 		StackException() {
 			// TODO save the start address to start stacking from.
-			generateStackTrace(32);
 		}
 
 	  public:
@@ -140,11 +181,11 @@ namespace cxxexcept {
 		StackException(StackException &&) = default;
 		StackException &operator=(StackException &&) = default;
 
-		virtual const char *what() const noexcept override { return stackTrace.c_str(); }
+		virtual const char *what() const noexcept override { return message.c_str(); }
 
-		virtual const Text &getBackTrace() const override {}
+		// virtual const Text &getBackTrace() const override {}
 
-		Text getStackTree(unsigned int stackDepth) const noexcept { return Text(stackTrace.c_str()); }
+		// virtual Text getStackTree(unsigned int stackDepth) const noexcept { return Text(stackTrace.c_str()); }
 
 		friend std::istream &operator>>(std::istream &is, StackException &t) {}
 
@@ -159,53 +200,6 @@ namespace cxxexcept {
 		// const Text &fillStackSource() const { return this->stackTrace; }
 
 	  protected:
-		// TODO add relative source path or just filename path.
-		inline void generateStackTrace(unsigned int stackDepth) {
-			// typedef void (Exception<int>::Exception::*Some_fnc_ptr)();
-			// Some_fnc_ptr fnc_ptr = &Exception<int>::Exception;
-
-			// TODO add support to be disabled for the release build.
-			std::ostringstream ss;
-			StackTrace stackTrace;
-			TraceResolver resolver;
-
-			stackTrace.load_here(stackDepth);
-			resolver.load_stacktrace(stackTrace);
-
-			SnippetFactory snip;
-			// auto pddd = snip.get_snippet("exception.cpp", 1, 100);
-
-			// stackTrace.skip_n_firsts(4);
-
-			// Colorize
-			// ColorMode::always;
-
-			// unsigned int offsetTrace = 3;
-			// for (std::size_t i = offsetTrace; i < stackTrace.size(); ++i) {
-
-			// 	ResolvedTrace trace = resolver.resolve(stackTrace[i]);
-
-			// 	auto snipCode = snip.get_snippet(trace.object_filename, trace.source.line, 5);
-
-			// 	std::cout << "#" << i << " " << trace.object_filename << " " << trace.object_function << " ["
-			// 			  << trace.addr << "]" << std::endl;
-
-			// 	//			std::cout << snipCode[trace.idx].second << std::endl;
-
-			// 	// auto it = snipCode.begin();
-			// 	// for (it; it != snipCode.end(); it++)
-			// 	// 	std::cout << (*it).second << std::endl;
-			// }
-
-			// this->stackTrace = std::move(ss.str());
-
-			/*	*/
-			std::ostringstream stream;
-			Printer p;
-			p.print(stackTrace, stream);
-			this->stackTrace = std::move(stream.str());
-		}
-
 	  public:
 		template <class U> static std::ostream &printStackMessage(const U &ex, std::ostream &o) noexcept {
 			o << ex.what() << ex.getStackTree();
@@ -282,7 +276,7 @@ namespace cxxexcept {
 		InvalidPointerException(const std::string &format, Args &&... args) : StackException(format, args...) {}
 	};
 
-	// TODO determine if shall be renamed
+	// TODO determine if shall be renamed to ErrnoException
 	class SystemException : public StackException<int> {
 	  public:
 		SystemException() : SystemException(errno) {}
@@ -293,16 +287,30 @@ namespace cxxexcept {
 		SystemException(const ExceptionString &format, Args &&... args) : StackException(format, args...) {}
 	};
 
+	// TODO rename
+	enum class PrintLevelOfInfo {
+		Minimal,
+		High,
+		Advnaced,
+		UberAdvanced,
+	};
+
 	template <class U> static const char *getExceptionName() noexcept { return typeid(U).name(); }
 
-	template <class U> static std::string getStackMessage(const U &ex) noexcept {
+	template <class U>
+	static String getStackMessage(const U &ex, PrintLevelOfInfo levelInfo = PrintLevelOfInfo::Minimal) noexcept {
 		static_assert(std::is_base_of<std::exception, U>::value, "Class Must be derived from std::exception");
 		const ThrowableException *throwEx = dynamic_cast<const ThrowableException *>(&ex);
+		const IExceptionBackTrace<String> *stackEx = dynamic_cast<const IExceptionBackTrace<String> *>(&ex);
 		std::ostringstream stream;
-		/*	*/
+		/*	If */
 		if (throwEx) {
 			stream << throwEx->getExceptionName();
 			stream << throwEx->what();
+			stream << throwEx->getEnviornmentVariables();
+			stream << throwEx->getCommandLine();
+			stream << stackEx->getBackTrace();
+			stream << stackEx->getBackTrace();
 		} else {
 			/*	A normal std::exception.	*/
 			stream << ex.what();
@@ -312,8 +320,6 @@ namespace cxxexcept {
 	}
 
 	template <class T> static void printStackMessage(const T &ex) noexcept { std::cerr << getStackMessage<T>(ex); }
-
-	std::ostream &operator<<(std::ostream &out, const ThrowableException &c) {}
 
 	// using enable_if_t = typename std::enable_if<B, T>::type;
 	using CaptureException = ThrowableException;
