@@ -68,13 +68,12 @@ namespace cxxexcept {
 	typedef std::wstring WString;
 
 #ifdef _CXXEXCEPT_USE_UNICODE
-	typedef WString ExceptionString;
+	using ExceptionString = WString;
 #else
-	typedef String ExceptionString;
-
+	using ExceptionString = String;
 #endif
 
-	class ThrowableException : public std::exception {
+	template <typename Text = ExceptionString> class ThrowableException : public std::exception {
 	  public:
 		ThrowableException() {}
 
@@ -88,6 +87,15 @@ namespace cxxexcept {
 		};
 
 		const char *getExceptionName() const noexcept { return typeid(*this).name(); }
+
+		virtual Text getName() const {
+			const char *className = abi::__cxa_demangle(getExceptionName(), nullptr, nullptr, nullptr);
+			if (className) {
+			}
+			Text strName(className);
+			free((void *)className);
+			return strName;
+		}
 
 	  public:
 		/// proc/self/cmdline
@@ -111,17 +119,13 @@ namespace cxxexcept {
 	};
 
 	// class Exception;
-	template <typename Text = ExceptionString> class ExceptionBase : public ThrowableException {
-
-		virtual Text getName() const {
-			const char *className = abi::__cxa_demangle(getExceptionName(), nullptr, nullptr, nullptr);
-			Text strName(className);
-			free((void *)className);
-			return strName;
-		}
-
+	template <typename Text = ExceptionString> class ExceptionBase : public ThrowableException<Text> {
+	  public:
 		// virtual const Text &getBackTrace() const = 0;
 		// virtual Text getStackTree(unsigned int stackDepth) const noexcept = 0;
+
+		const char *fillStackSource() const { return ""; }
+		// const Text &fillStackSource() const { return this->stackTrace; }
 
 	  private:
 		Text text;
@@ -300,7 +304,7 @@ namespace cxxexcept {
 	template <class U>
 	static String getStackMessage(const U &ex, PrintLevelOfInfo levelInfo = PrintLevelOfInfo::Minimal) noexcept {
 		static_assert(std::is_base_of<std::exception, U>::value, "Class Must be derived from std::exception");
-		const ThrowableException *throwEx = dynamic_cast<const ThrowableException *>(&ex);
+		const ThrowableException<String> *throwEx = dynamic_cast<const ThrowableException<String> *>(&ex);
 		const IExceptionBackTrace<String> *stackEx = dynamic_cast<const IExceptionBackTrace<String> *>(&ex);
 		std::ostringstream stream;
 		/*	If */
@@ -322,7 +326,7 @@ namespace cxxexcept {
 	template <class T> static void printStackMessage(const T &ex) noexcept { std::cerr << getStackMessage<T>(ex); }
 
 	// using enable_if_t = typename std::enable_if<B, T>::type;
-	using CaptureException = ThrowableException;
+	using CaptureException = ThrowableException<String>;
 
 } // namespace cxxexcept
 
