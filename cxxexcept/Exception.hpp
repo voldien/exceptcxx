@@ -135,14 +135,19 @@ namespace cxxexcept {
 	  public:
 		IExceptionBackTrace() {}
 
-		IExceptionBackTrace(const IExceptionBackTrace &) = default;
-		IExceptionBackTrace &operator=(const IExceptionBackTrace &) = default;
-		IExceptionBackTrace(IExceptionBackTrace &&) = default;
-		IExceptionBackTrace &operator=(IExceptionBackTrace &&) = default;
+		IExceptionBackTrace(const IExceptionBackTrace &other) = default;
+		IExceptionBackTrace &operator=(const IExceptionBackTrace &other) = default;
+		IExceptionBackTrace(IExceptionBackTrace &&other) = default;
+		IExceptionBackTrace &operator=(IExceptionBackTrace &&other) = default;
 
-		virtual const Text &getBackTrace() const { return getStackTree(-1); }
+		virtual Text getBackTrace() const { return getStackTree(-1); }
 
 		virtual Text getStackTree(int stackDepth) const noexcept {
+
+			if (stackDepth < 0) {
+				stackDepth = 32;
+			}
+
 			/*	Extract stack.	*/
 			TraceResolver resolver;
 			StackTrace stackTrace;
@@ -284,11 +289,9 @@ namespace cxxexcept {
 	class SystemException : public StackException<int> {
 	  public:
 		SystemException() : SystemException(errno) {}
-		SystemException(int err) : StackException(strerror(errno)) {}
+		SystemException(int err) : StackException(strerror(err)) {}
 		SystemException(SystemException &&other) = default;
 		SystemException(const ExceptionString &arg) : StackException(arg) {}
-		template <typename... Args>
-		SystemException(const ExceptionString &format, Args &&... args) : StackException(format, args...) {}
 	};
 
 	// TODO rename
@@ -313,8 +316,10 @@ namespace cxxexcept {
 			stream << throwEx->what();
 			stream << throwEx->getEnviornmentVariables();
 			stream << throwEx->getCommandLine();
-			stream << stackEx->getBackTrace();
-			stream << stackEx->getBackTrace();
+			if (stackEx) {
+				stream << stackEx->getBackTrace();
+				stream << stackEx->getBackTrace();
+			}
 		} else {
 			/*	A normal std::exception.	*/
 			stream << ex.what();
