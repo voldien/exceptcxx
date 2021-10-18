@@ -28,6 +28,16 @@ cmake ..
 make
 ```
 
+### Integration with CMake
+
+```cmake
+ADD_SUBDIRECTORY(exceptCXX EXCLUDE_FROM_ALL)
+```
+
+```cmake
+TARGET_LINK_LIBRARIES(myTarget PUBLIC cxxexcept)
+```
+
 # Examples
 
 ```
