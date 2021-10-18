@@ -1,19 +1,6 @@
 /**
 	CxxExcept - Universal Exception Library
-	Copyright (C) 2018  Valdemar Lindberg
-
-	This program is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
-
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
-
-	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	Copyright (C) 2021  Valdemar Lindberg
 
 */
 #ifndef _CXX_EXECPT_CXX_H_
@@ -35,12 +22,12 @@
 #include <type_traits>
 #include <typeinfo>
 
+
+#define CXXEXCEPT_USE_BACKWARD
+#ifdef CXXEXCEPT_USE_BACKWARD
 #define BACKWARD_HAS_BFD 1
 #define BACKWARD_HAS_UNWIND 1
-//#define BACKWARD_HAS_BACKTRACE_SYMBOL 1
 #include <backward.hpp>
-#ifdef CXXEXCEPT_USE_BACKWARD
-
 #define CXXEXCEPT_BACKWARD
 #endif
 
@@ -59,8 +46,6 @@
 //#include <unicode/unistr.h>
 
 namespace cxxexcept {
-	using namespace backward;
-
 	// TODO add verison value.
 
 	// TODO check if need to handle unicode, locale and etc.
@@ -118,59 +103,70 @@ namespace cxxexcept {
 	  private:
 	};
 
-	// class Exception;
-	template <typename Text = ExceptionString> class ExceptionBase : public ThrowableException<Text> {
-	  public:
-		// virtual const Text &getBackTrace() const = 0;
-		// virtual Text getStackTree(unsigned int stackDepth) const noexcept = 0;
-
-		const char *fillStackSource() const { return ""; }
-		// const Text &fillStackSource() const { return this->stackTrace; }
-
-	  private:
-		Text text;
-	};
-
 	template <class Text> class IExceptionBackTrace {
 	  public:
-		IExceptionBackTrace() {}
+		IExceptionBackTrace(void *stack_start_address) : stack_start_address(stack_start_address) {}
+		virtual ~IExceptionBackTrace() = default;
+		virtual Text getBackTrace() const noexcept = 0;
+		virtual Text getStackTree(int stackDepth) const noexcept = 0;
 
-		IExceptionBackTrace(const IExceptionBackTrace &other) = default;
-		IExceptionBackTrace &operator=(const IExceptionBackTrace &other) = default;
-		IExceptionBackTrace(IExceptionBackTrace &&other) = default;
-		IExceptionBackTrace &operator=(IExceptionBackTrace &&other) = default;
+		void *getStackStartAddress() const noexcept { return stack_start_address; }
 
-		virtual Text getBackTrace() const { return getStackTree(-1); }
+	  private:
+		void *stack_start_address;
+	};
 
-		virtual Text getStackTree(int stackDepth) const noexcept {
+	template <class Text> class IExceptioBackwardnBackTrace : public IExceptionBackTrace<Text> {
+	  public:
+		IExceptioBackwardnBackTrace() : IExceptionBackTrace<Text>(nullptr) {
+			this->resolver = std::make_shared<backward::TraceResolver>();
+			this->stackTrace = std::make_shared<backward::StackTrace>();
+		}
+		virtual ~IExceptioBackwardnBackTrace() = default;
 
+		IExceptioBackwardnBackTrace(const IExceptioBackwardnBackTrace &other) = default;
+		IExceptioBackwardnBackTrace &operator=(const IExceptioBackwardnBackTrace &other) = default;
+		IExceptioBackwardnBackTrace(IExceptioBackwardnBackTrace &&other) = default;
+		IExceptioBackwardnBackTrace &operator=(IExceptioBackwardnBackTrace &&other) = default;
+
+		virtual Text getBackTrace() const noexcept override { return getStackTree(-1); }
+
+		virtual Text getStackTree(int stackDepth) const noexcept override {
+
+			/*	All.	*/
 			if (stackDepth < 0) {
 				stackDepth = 32;
 			}
 
 			/*	Extract stack.	*/
-			TraceResolver resolver;
-			StackTrace stackTrace;
-			int si = stackTrace.load_here(stackDepth);
-			resolver.load_stacktrace(stackTrace);
+			//	int si = stackTrace->load_here(stackDepth);
+			size_t stack_size = stackTrace->load_from(this->getStackStartAddress(), stackDepth);
+			resolver->load_stacktrace(*stackTrace);
+			size_t thread_id = stackTrace->thread_id();
+
+			// pthread_getname_np
+			stackTrace->size();
 
 			/*	Generate the print message.	*/
 			std::ostringstream stream;
-			Printer p;
-			p.print(stackTrace, stream);
+			backward::Printer p;
+			p.print(*stackTrace, stream);
 			String stackTraceStr = std::move(stream.str());
 			return stackTraceStr;
 		}
 
 	  private:
+		std::shared_ptr<backward::TraceResolver> resolver;
+		std::shared_ptr<backward::StackTrace> stackTrace;
 	};
 
 	// std::basic_string<Char>
 	// std::basic_string<Char>
 	// typename Char
-	template <class T, class Text = ExceptionString, class BackTrace = IExceptionBackTrace<Text>>
-	class StackException : public ExceptionBase<ExceptionString>, public BackTrace {
+	template <class T, class Text = ExceptionString, class BackTrace = IExceptioBackwardnBackTrace<Text>>
+	class StackException : public ThrowableException<Text>, public BackTrace {
 		static_assert(std::is_object<Text>::value, "");
+		static_assert(std::is_base_of<IExceptionBackTrace<Text>, BackTrace>::value, "BackTrace Class be ");
 		// TODO assert the backstrace impl class typr and etc.
 
 	  protected:
@@ -192,26 +188,17 @@ namespace cxxexcept {
 
 		virtual const char *what() const noexcept override { return message.c_str(); }
 
-		// virtual const Text &getBackTrace() const override {}
-
-		// virtual Text getStackTree(unsigned int stackDepth) const noexcept { return Text(stackTrace.c_str()); }
-
-		friend std::istream &operator>>(std::istream &is, StackException &t) {}
-
-		friend std::ostream &operator<<(std::ostream &os, const StackException &t) {}
-
-		/**
-		 * @brief
-		 *
-		 * @return const char*
-		 */
-		const char *fillStackSource() const { return ""; }
-		// const Text &fillStackSource() const { return this->stackTrace; }
+		friend std::istream &operator>>(std::istream &is, StackException &exception) { return is; }
+		friend std::ostream &operator<<(std::ostream &os, const StackException &exception) {
+			os << exception.what();
+			return os;
+		}
 
 	  protected:
 	  public:
 		template <class U> static std::ostream &printStackMessage(const U &ex, std::ostream &o) noexcept {
 			o << ex.what() << ex.getStackTree();
+			return o;
 		}
 		template <class U> static void printStackMessage(const U &ex) noexcept {
 			printStackMessage(ex, std::cout);
@@ -222,6 +209,45 @@ namespace cxxexcept {
 		Text stackTrace;
 		Text message;
 	};
+
+	// TODO rename
+	enum class PrintLevelOfInfo {
+		Minimal,
+		High,
+		Advnaced,
+		UberAdvanced,
+	};
+
+	template <class U> static const char *getExceptionName() noexcept { return typeid(U).name(); }
+
+	template <class U>
+	static String getStackMessage(const U &ex, PrintLevelOfInfo levelInfo = PrintLevelOfInfo::Minimal) noexcept {
+		static_assert(std::is_base_of<std::exception, U>::value, "Class Must be derived from std::exception");
+		const ThrowableException<String> *throwEx = dynamic_cast<const ThrowableException<String> *>(&ex);
+		const IExceptionBackTrace<String> *stackEx = dynamic_cast<const IExceptionBackTrace<String> *>(&ex);
+		std::ostringstream stream;
+		/*	If */
+		if (throwEx) {
+			stream << throwEx->getExceptionName();
+			stream << throwEx->what();
+			stream << throwEx->getEnviornmentVariables();
+			stream << throwEx->getCommandLine();
+			if (stackEx) {
+				stream << stackEx->getBackTrace();
+				stream << stackEx->getBackTrace();
+			}
+		} else {
+			/*	A normal std::exception.	*/
+			stream << ex.what();
+		}
+
+		return stream.str();
+	}
+
+	template <class T> static void printStackMessage(const T &ex) noexcept { std::cerr << getStackMessage<T>(ex); }
+
+	// using enable_if_t = typename std::enable_if<B, T>::type;
+	using CaptureException = ThrowableException<String>;
 
 	// class ThrowableException : public Exception<int> {};
 
@@ -293,45 +319,6 @@ namespace cxxexcept {
 		SystemException(SystemException &&other) = default;
 		SystemException(const ExceptionString &arg) : StackException(arg) {}
 	};
-
-	// TODO rename
-	enum class PrintLevelOfInfo {
-		Minimal,
-		High,
-		Advnaced,
-		UberAdvanced,
-	};
-
-	template <class U> static const char *getExceptionName() noexcept { return typeid(U).name(); }
-
-	template <class U>
-	static String getStackMessage(const U &ex, PrintLevelOfInfo levelInfo = PrintLevelOfInfo::Minimal) noexcept {
-		static_assert(std::is_base_of<std::exception, U>::value, "Class Must be derived from std::exception");
-		const ThrowableException<String> *throwEx = dynamic_cast<const ThrowableException<String> *>(&ex);
-		const IExceptionBackTrace<String> *stackEx = dynamic_cast<const IExceptionBackTrace<String> *>(&ex);
-		std::ostringstream stream;
-		/*	If */
-		if (throwEx) {
-			stream << throwEx->getExceptionName();
-			stream << throwEx->what();
-			stream << throwEx->getEnviornmentVariables();
-			stream << throwEx->getCommandLine();
-			if (stackEx) {
-				stream << stackEx->getBackTrace();
-				stream << stackEx->getBackTrace();
-			}
-		} else {
-			/*	A normal std::exception.	*/
-			stream << ex.what();
-		}
-
-		return stream.str();
-	}
-
-	template <class T> static void printStackMessage(const T &ex) noexcept { std::cerr << getStackMessage<T>(ex); }
-
-	// using enable_if_t = typename std::enable_if<B, T>::type;
-	using CaptureException = ThrowableException<String>;
 
 } // namespace cxxexcept
 
