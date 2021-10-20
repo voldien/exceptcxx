@@ -21,9 +21,10 @@ TEST_P(ExceptionNameTest, Names) {
 	} catch (std::exception &ex) {
 		ex.what();
 		/*	*/
-		cxxexcept::ThrowableException &throwable = dynamic_cast<cxxexcept::ThrowableException &>(ex);
+		cxxexcept::ThrowableException<cxxexcept::ExceptionString> &throwable =
+			dynamic_cast<cxxexcept::ThrowableException<cxxexcept::ExceptionString> &>(ex);
 		/*	*/
-		ASSERT_STREQ(throwable.getExceptionName(), "RuntimeException");
+		ASSERT_STREQ(throwable.getName().c_str(), expected.c_str());
 	}
 }
 

@@ -22,7 +22,6 @@
 #include <type_traits>
 #include <typeinfo>
 
-
 #define CXXEXCEPT_USE_BACKWARD
 #ifdef CXXEXCEPT_USE_BACKWARD
 #define BACKWARD_HAS_BFD 1
