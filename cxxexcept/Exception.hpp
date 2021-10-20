@@ -139,7 +139,11 @@ namespace cxxexcept {
 
 			/*	Extract stack.	*/
 			//	int si = stackTrace->load_here(stackDepth);
-			size_t stack_size = stackTrace->load_from(this->getStackStartAddress(), stackDepth);
+			size_t stack_size;
+			if (this->getStackStartAddress() != nullptr)
+				stack_size = stackTrace->load_from(this->getStackStartAddress(), stackDepth);
+			else
+				stack_size = stackTrace->load_here(stackDepth);
 			resolver->load_stacktrace(*stackTrace);
 			size_t thread_id = stackTrace->thread_id();
 
