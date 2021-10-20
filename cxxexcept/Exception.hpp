@@ -73,11 +73,11 @@ namespace cxxexcept {
 		const char *getExceptionName() const noexcept { return typeid(*this).name(); }
 
 		virtual Text getName() const {
-			const char *className = abi::__cxa_demangle(getExceptionName(), nullptr, nullptr, nullptr);
+			char *className = abi::__cxa_demangle(getExceptionName(), nullptr, nullptr, nullptr);
 			if (className) {
 			}
 			Text strName(className);
-			free((void *)className);
+			free(className);
 			return strName;
 		}
 
@@ -227,13 +227,12 @@ namespace cxxexcept {
 		std::ostringstream stream;
 		/*	If */
 		if (throwEx) {
-			stream << throwEx->getExceptionName();
+			stream << throwEx->getName() << ": ";
 			stream << throwEx->what();
 			stream << throwEx->getEnviornmentVariables();
 			stream << throwEx->getCommandLine();
 			if (stackEx) {
-				stream << stackEx->getBackTrace();
-				stream << stackEx->getBackTrace();
+				stream << std::endl << stackEx->getBackTrace();
 			}
 		} else {
 			/*	A normal std::exception.	*/
