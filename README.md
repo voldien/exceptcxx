@@ -1,5 +1,5 @@
 # ExecptCXX 
-[![Actions Build Status](https://github.com/voldien/execptcxx/workflows/execptcxx/badge.svg?branch=master)](https://github.com/voldien/execptcxx/actions)
+[![CxxExecpt](https://github.com/voldien/execptcxx/actions/workflows/linux-build.yml/badge.svg)](https://github.com/voldien/execptcxx/actions/workflows/linux-build.yml)
 [![GitHub release](https://img.shields.io/github/release/voldien/execptcxx.svg)](https://github.com/voldien/execptcxx/releases)
 [![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/voldien/execptcxx.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/voldien/execptcxx/context:cpp)
 
