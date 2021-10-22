@@ -6,7 +6,11 @@
 #ifndef _CXX_EXECPT_CXX_H_
 #define _CXX_EXECPT_CXX_H_ 1
 
-#include <bfd.h>
+#ifndef __cplusplus
+
+#endif
+
+//#include <bfd.h>
 #include <cstdlib>
 // TODO check if conditional.
 #include <cerrno>
@@ -24,6 +28,7 @@
 
 #define CXXEXCEPT_USE_BACKWARD
 #ifdef CXXEXCEPT_USE_BACKWARD
+// TODO add options for which backend.
 #define BACKWARD_HAS_BFD 1
 #define BACKWARD_HAS_UNWIND 1
 #include <backward.hpp>
@@ -37,6 +42,8 @@
 
 #if defined(__linux) || defined(__linux__)
 #include <unistd.h>
+#ifdef CXXEXCEPT_LINUX
+#endif
 #endif
 
 #ifdef __ANDROID__
@@ -57,6 +64,49 @@ namespace cxxexcept {
 	using ExceptionString = String;
 #endif
 
+	enum class StackColorPalette { STACK_COLOR_NONE, STACK_COLOR_YELLOW, STACK_COLOR_PINK };
+
+	/**
+	 * @brief
+	 *
+	 * @tparam Text
+	 */
+	template <class Text> class IExceptionBackTrace {
+	  public:
+	  public:
+		IExceptionBackTrace(void *stack_start_address) : stack_start_address(stack_start_address) {}
+		virtual ~IExceptionBackTrace() = default;
+		/**
+		 * @brief Get the Back Trace object
+		 *
+		 * @param colorPalette
+		 * @return Text
+		 */
+		virtual Text
+		getBackTrace(StackColorPalette colorPalette = StackColorPalette::STACK_COLOR_NONE) const noexcept = 0;
+
+		/**
+		 * @brief Get the Stack Tree object
+		 *
+		 * @param stackDepth
+		 * @param colorPalette
+		 * @return Text
+		 */
+		virtual Text
+		getStackTree(int stackDepth,
+					 StackColorPalette colorPalette = StackColorPalette::STACK_COLOR_NONE) const noexcept = 0;
+
+		void *getStackStartAddress() const noexcept { return stack_start_address; }
+
+	  private:
+		void *stack_start_address;
+	};
+
+	/**
+	 * @brief
+	 *
+	 * @tparam Text
+	 */
 	template <typename Text = ExceptionString> class ThrowableException : public std::exception {
 	  public:
 		ThrowableException() {}
@@ -65,10 +115,6 @@ namespace cxxexcept {
 		ThrowableException &operator=(const ThrowableException &) = default;
 		ThrowableException(ThrowableException &&) = default;
 		ThrowableException &operator=(ThrowableException &&) = default;
-
-		enum StackColorPalette {
-
-		};
 
 		const char *getExceptionName() const noexcept { return typeid(*this).name(); }
 
@@ -102,35 +148,31 @@ namespace cxxexcept {
 	  private:
 	};
 
-	template <class Text> class IExceptionBackTrace {
+#ifdef CXXEXCEPT_BACKWARD
+// TODO relocate the backward impl here!
+#endif
+
+	template <class Text> class IExceptioBackwardBackTrace : public IExceptionBackTrace<Text> {
 	  public:
-		IExceptionBackTrace(void *stack_start_address) : stack_start_address(stack_start_address) {}
-		virtual ~IExceptionBackTrace() = default;
-		virtual Text getBackTrace() const noexcept = 0;
-		virtual Text getStackTree(int stackDepth) const noexcept = 0;
-
-		void *getStackStartAddress() const noexcept { return stack_start_address; }
-
-	  private:
-		void *stack_start_address;
-	};
-
-	template <class Text> class IExceptioBackwardnBackTrace : public IExceptionBackTrace<Text> {
-	  public:
-		IExceptioBackwardnBackTrace() : IExceptionBackTrace<Text>(nullptr) {
+		IExceptioBackwardBackTrace() : IExceptionBackTrace<Text>(nullptr) {
 			this->resolver = std::make_shared<backward::TraceResolver>();
 			this->stackTrace = std::make_shared<backward::StackTrace>();
 		}
-		virtual ~IExceptioBackwardnBackTrace() = default;
+		virtual ~IExceptioBackwardBackTrace() = default;
 
-		IExceptioBackwardnBackTrace(const IExceptioBackwardnBackTrace &other) = default;
-		IExceptioBackwardnBackTrace &operator=(const IExceptioBackwardnBackTrace &other) = default;
-		IExceptioBackwardnBackTrace(IExceptioBackwardnBackTrace &&other) = default;
-		IExceptioBackwardnBackTrace &operator=(IExceptioBackwardnBackTrace &&other) = default;
+		IExceptioBackwardBackTrace(const IExceptioBackwardBackTrace &other) = default;
+		IExceptioBackwardBackTrace &operator=(const IExceptioBackwardBackTrace &other) = default;
+		IExceptioBackwardBackTrace(IExceptioBackwardBackTrace &&other) = default;
+		IExceptioBackwardBackTrace &operator=(IExceptioBackwardBackTrace &&other) = default;
 
-		virtual Text getBackTrace() const noexcept override { return getStackTree(-1); }
+		virtual Text
+		getBackTrace(StackColorPalette colorPalette = StackColorPalette::STACK_COLOR_NONE) const noexcept override {
+			return getStackTree(-1, colorPalette);
+		}
 
-		virtual Text getStackTree(int stackDepth) const noexcept override {
+		virtual Text
+		getStackTree(int stackDepth,
+					 StackColorPalette colorPalette = StackColorPalette::STACK_COLOR_NONE) const noexcept override {
 
 			/*	All.	*/
 			if (stackDepth < 0) {
@@ -163,10 +205,12 @@ namespace cxxexcept {
 		std::shared_ptr<backward::StackTrace> stackTrace;
 	};
 
+	template <class T> using ExceptionDefaultBackStackImpl = IExceptioBackwardBackTrace<T>;
+
 	// std::basic_string<Char>
 	// std::basic_string<Char>
 	// typename Char
-	template <class T, class Text = ExceptionString, class BackTrace = IExceptioBackwardnBackTrace<Text>>
+	template <class T, class Text = ExceptionString, class BackTrace = ExceptionDefaultBackStackImpl<Text>>
 	class StackException : public ThrowableException<Text>, public BackTrace {
 		static_assert(std::is_object<Text>::value, "");
 		static_assert(std::is_base_of<IExceptionBackTrace<Text>, BackTrace>::value, "BackTrace Class be ");
@@ -251,8 +295,6 @@ namespace cxxexcept {
 	// using enable_if_t = typename std::enable_if<B, T>::type;
 	using CaptureException = ThrowableException<String>;
 
-	// class ThrowableException : public Exception<int> {};
-
 	class RuntimeException : public StackException<int> {
 	  public:
 		RuntimeException() : StackException("Not implemented yet!") {}
@@ -317,9 +359,11 @@ namespace cxxexcept {
 	class SystemException : public StackException<int> {
 	  public:
 		SystemException() : SystemException(errno) {}
-		SystemException(int err) : StackException(strerror(err)) {}
+		SystemException(int errno_nr) : StackException(strerror(errno_nr)) {}
 		SystemException(SystemException &&other) = default;
 		SystemException(const ExceptionString &arg) : StackException(arg) {}
+		template <typename... Args>
+		SystemException(int errno_nr, const std::string &format, Args &&... args) : StackException(format, args...) {}
 	};
 
 } // namespace cxxexcept
