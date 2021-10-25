@@ -66,7 +66,7 @@ namespace cxxexcept {
 	using ExceptionString = String;
 #endif
 
-	enum class StackColorPalette { STACK_COLOR_NONE, STACK_COLOR_YELLOW, STACK_COLOR_PINK };
+	enum class StackColorPalette { StackColorNone, StackColorDefault, StackColorYellow, StackColorPink };
 
 	/**
 	 * @brief
@@ -85,7 +85,7 @@ namespace cxxexcept {
 		 * @return Text
 		 */
 		virtual Text
-		getBackTrace(StackColorPalette colorPalette = StackColorPalette::STACK_COLOR_NONE) const noexcept = 0;
+		getBackTrace(StackColorPalette colorPalette = StackColorPalette::StackColorNone) const noexcept = 0;
 
 		/**
 		 * @brief Get the Stack Tree object
@@ -96,9 +96,9 @@ namespace cxxexcept {
 		 */
 		virtual Text
 		getStackTree(int stackDepth,
-					 StackColorPalette colorPalette = StackColorPalette::STACK_COLOR_NONE) const noexcept = 0;
+					 StackColorPalette colorPalette = StackColorPalette::StackColorNone) const noexcept = 0;
 
-		void *getStackStartAddress() const noexcept { return stack_start_address; }
+		void *getStackStartAddress() const noexcept { return this->stack_start_address; }
 
 	  private:
 		void *stack_start_address;
@@ -150,9 +150,7 @@ namespace cxxexcept {
 	  private:
 	};
 
-#ifdef CXXEXCEPT_BACKWARD
-// TODO relocate the backward impl here!
-#endif
+#if defined(CXXEXCEPT_USE_BACKWARD)
 	/**
 	 * @brief
 	 *
@@ -172,13 +170,13 @@ namespace cxxexcept {
 		IExceptioBackwardBackTrace &operator=(IExceptioBackwardBackTrace &&other) = default;
 
 		virtual Text
-		getBackTrace(StackColorPalette colorPalette = StackColorPalette::STACK_COLOR_NONE) const noexcept override {
+		getBackTrace(StackColorPalette colorPalette = StackColorPalette::StackColorDefault) const noexcept override {
 			return getStackTree(-1, colorPalette);
 		}
 
 		virtual Text
 		getStackTree(int stackDepth,
-					 StackColorPalette colorPalette = StackColorPalette::STACK_COLOR_NONE) const noexcept override {
+					 StackColorPalette colorPalette = StackColorPalette::StackColorDefault) const noexcept override {
 
 			/*	All.	*/
 			if (stackDepth < 0) {
@@ -193,15 +191,20 @@ namespace cxxexcept {
 			else
 				stack_size = stackTrace->load_here(stackDepth);
 			resolver->load_stacktrace(*stackTrace);
-			size_t thread_id = stackTrace->thread_id();
 
 			// pthread_getname_np
+			size_t thread_id = stackTrace->thread_id();
+
 			stackTrace->size();
 
 			/*	Generate the print message.	*/
 			std::ostringstream stream;
 			backward::Printer p;
+			if (colorPalette == StackColorPalette::StackColorDefault)
+				p.color_mode = backward::ColorMode::type::always;
 			p.print(*stackTrace, stream);
+
+			/*	*/
 			String stackTraceStr = std::move(stream.str());
 			return stackTraceStr;
 		}
@@ -210,8 +213,13 @@ namespace cxxexcept {
 		std::shared_ptr<backward::TraceResolver> resolver;
 		std::shared_ptr<backward::StackTrace> stackTrace;
 	};
+#endif
 
+#if defined(CXXEXCEPT_USE_BACKWARD)
 	template <class T> using ExceptionDefaultBackStackImpl = IExceptioBackwardBackTrace<T>;
+#else
+	template <class T> class ExceptionDefaultBackStackImpl {};
+#endif
 
 	// std::basic_string<Char>
 	// std::basic_string<Char>
@@ -240,6 +248,7 @@ namespace cxxexcept {
 		StackException &operator=(StackException &&) = default;
 
 		virtual const char *what() const noexcept override { return message.c_str(); }
+		// virtual const Text & what() const  { return message; }
 
 		friend std::istream &operator>>(std::istream &is, StackException &exception) { return is; }
 		friend std::ostream &operator<<(std::ostream &os, const StackException &exception) {
@@ -259,7 +268,6 @@ namespace cxxexcept {
 		}
 
 	  private:
-		Text stackTrace;
 		Text message;
 	};
 
@@ -316,7 +324,7 @@ namespace cxxexcept {
 
 	class RuntimeException : public StackException<int> {
 	  public:
-		RuntimeException() : StackException("Not implemented yet!") {}
+		RuntimeException() : StackException("RuntimeException") {}
 		RuntimeException(RuntimeException &&other) = default;
 		RuntimeException(const std::string &arg) : StackException(arg) {}
 		template <typename... Args>
@@ -336,7 +344,7 @@ namespace cxxexcept {
 	class PermissionException : public StackException<int> {};
 	class InvalidArgumentException : public StackException<int> {
 	  public:
-		InvalidArgumentException() : StackException("Invalid Argument!") {}
+		InvalidArgumentException() : StackException("Invalid Argument") {}
 		InvalidArgumentException(InvalidArgumentException &&other) = default;
 		InvalidArgumentException(const std::string &arg) : StackException(arg) {}
 		template <typename... Args>
@@ -345,7 +353,7 @@ namespace cxxexcept {
 	class NotImplementedException : public StackException<int> {};
 	class NotSupportedException : public StackException<int> {
 	  public:
-		NotSupportedException() : StackException("Invalid Argument!") {}
+		NotSupportedException() : StackException("Not Supported") {}
 		NotSupportedException(NotSupportedException &&other) = default;
 		NotSupportedException(const std::string &arg) : StackException(arg) {}
 		template <typename... Args>

@@ -1,6 +1,10 @@
 #include "Exception.hpp"
 #include <gtest/gtest.h>
 
+TEST(ThrowException, StackException) {
+	ASSERT_THROW(throw cxxexcept::StackException<std::string>(""), cxxexcept::StackException<std::string>);
+}
+
 TEST(ThrowException, RunTimeException) {
 	ASSERT_THROW(throw cxxexcept::RuntimeException(), cxxexcept::RuntimeException);
 }
@@ -28,7 +32,8 @@ TEST_P(ExceptionNameTest, Names) {
 	}
 }
 
-INSTANTIATE_TEST_SUITE_P(ThrowException, ExceptionNameTest, ::testing::Values(std::make_tuple("cxxexcept::RuntimeException")));
+INSTANTIATE_TEST_SUITE_P(ThrowException, ExceptionNameTest,
+						 ::testing::Values(std::make_tuple("cxxexcept::RuntimeException")));
 
 TEST(ThrowException, RunTimeException_Name_Correct) {}
 
