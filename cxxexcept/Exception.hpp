@@ -49,7 +49,9 @@
 #ifdef __ANDROID__
 #endif
 
-//#include <unicode/unistr.h>
+#ifdef CXXEXCEPT_USE_UNICODE
+#include <unicode/unistr.h>
+#endif
 
 namespace cxxexcept {
 	// TODO add verison value.
@@ -151,7 +153,11 @@ namespace cxxexcept {
 #ifdef CXXEXCEPT_BACKWARD
 // TODO relocate the backward impl here!
 #endif
-
+	/**
+	 * @brief
+	 *
+	 * @tparam Text
+	 */
 	template <class Text> class IExceptioBackwardBackTrace : public IExceptionBackTrace<Text> {
 	  public:
 		IExceptioBackwardBackTrace() : IExceptionBackTrace<Text>(nullptr) {
@@ -267,6 +273,14 @@ namespace cxxexcept {
 
 	template <class U> static const char *getExceptionName() noexcept { return typeid(U).name(); }
 
+	/**
+	 * @brief Get the Stack Message object
+	 *
+	 * @tparam U
+	 * @param ex
+	 * @param levelInfo
+	 * @return String
+	 */
 	template <class U>
 	static String getStackMessage(const U &ex, PrintLevelOfInfo levelInfo = PrintLevelOfInfo::Minimal) noexcept {
 		static_assert(std::is_base_of<std::exception, U>::value, "Class Must be derived from std::exception");
@@ -290,10 +304,15 @@ namespace cxxexcept {
 		return stream.str();
 	}
 
+	/**
+	 * @brief
+	 *
+	 * @tparam T
+	 * @param ex
+	 */
 	template <class T> static void printStackMessage(const T &ex) noexcept { std::cerr << getStackMessage<T>(ex); }
 
-	// using enable_if_t = typename std::enable_if<B, T>::type;
-	using CaptureException = ThrowableException<String>;
+	using CaptureException = ThrowableException<ExceptionString>;
 
 	class RuntimeException : public StackException<int> {
 	  public:
@@ -312,12 +331,6 @@ namespace cxxexcept {
 		template <typename... Args>
 		PermissionDeniedException(const std::string &format, Args &&... args) : StackException(format, args...) {}
 	};
-
-	/**
-	 * @brief
-	 *
-	 */
-	class ErrnoException : public StackException<int> {};
 	class DivideByZeroException : public StackException<int> {};
 	class IOException : public StackException<int> {};
 	class PermissionException : public StackException<int> {};
