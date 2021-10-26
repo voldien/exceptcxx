@@ -348,18 +348,19 @@ namespace cxxexcept {
 	  public:
 		RuntimeException() : StackException("RuntimeException") {}
 		RuntimeException(RuntimeException &&other) = default;
-		RuntimeException(const std::string &arg) : StackException(arg) {}
+		RuntimeException(const DefaultExcepCXXString &arg) : StackException(arg) {}
 		template <typename... Args>
-		RuntimeException(const std::string &format, Args &&... args) : StackException(format, args...) {}
+		RuntimeException(const DefaultExcepCXXString &format, Args &&... args) : StackException(format, args...) {}
 	};
 
 	class PermissionDeniedException : public StackException<> {
 	  public:
 		PermissionDeniedException() : StackException("PermissionDeniedException!") {}
 
-		PermissionDeniedException(const std::string &arg) : StackException(arg) {}
+		PermissionDeniedException(const DefaultExcepCXXString &arg) : StackException(arg) {}
 		template <typename... Args>
-		PermissionDeniedException(const std::string &format, Args &&... args) : StackException(format, args...) {}
+		PermissionDeniedException(const DefaultExcepCXXString &format, Args &&... args)
+			: StackException(format, args...) {}
 	};
 	class DivideByZeroException : public StackException<> {};
 	class IOException : public StackException<> {};
@@ -368,34 +369,37 @@ namespace cxxexcept {
 	  public:
 		InvalidArgumentException() : StackException("Invalid Argument") {}
 		InvalidArgumentException(InvalidArgumentException &&other) = default;
-		InvalidArgumentException(const std::string &arg) : StackException(arg) {}
+		InvalidArgumentException(const DefaultExcepCXXString &message) : StackException(message) {}
 		template <typename... Args>
-		InvalidArgumentException(const std::string &format, Args &&... args) : StackException(format, args...) {}
+		InvalidArgumentException(const DefaultExcepCXXString &format, Args &&... args)
+			: StackException(format, args...) {}
 	};
 	class NotImplementedException : public StackException<> {};
 	class NotSupportedException : public StackException<> {
 	  public:
 		NotSupportedException() : StackException("Not Supported") {}
 		NotSupportedException(NotSupportedException &&other) = default;
-		NotSupportedException(const std::string &arg) : StackException(arg) {}
+		NotSupportedException(const DefaultExcepCXXString &message) : StackException(message) {}
 		template <typename... Args>
-		NotSupportedException(const std::string &format, Args &&... args) : StackException(format, args...) {}
+		NotSupportedException(const DefaultExcepCXXString &format, Args &&... args) : StackException(format, args...) {}
 	};
 	class IndexOutOfRangeException : public StackException<> {
 	  public:
 		IndexOutOfRangeException() : StackException("IndexOutOfRangeException") {}
 		IndexOutOfRangeException(IndexOutOfRangeException &&other) = default;
-		IndexOutOfRangeException(const std::string &arg) : StackException(arg) {}
+		IndexOutOfRangeException(const DefaultExcepCXXString &message) : StackException(message) {}
 		template <typename... Args>
-		IndexOutOfRangeException(const std::string &format, Args &&... args) : StackException(format, args...) {}
+		IndexOutOfRangeException(const DefaultExcepCXXString &format, Args &&... args)
+			: StackException(format, args...) {}
 	};
 	class InvalidPointerException : public StackException<> {
 	  public:
 		InvalidPointerException() : StackException("IndexOutOfRangeException") {}
 		InvalidPointerException(InvalidPointerException &&other) = default;
-		InvalidPointerException(const std::string &arg) : StackException(arg) {}
+		InvalidPointerException(const DefaultExcepCXXString &message) : StackException(message) {}
 		template <typename... Args>
-		InvalidPointerException(const std::string &format, Args &&... args) : StackException(format, args...) {}
+		InvalidPointerException(const DefaultExcepCXXString &format, Args &&... args)
+			: StackException(format, args...) {}
 	};
 
 	// TODO determine if shall be renamed to ErrnoException
@@ -404,9 +408,10 @@ namespace cxxexcept {
 		SystemException() : SystemException(errno) {}
 		SystemException(int errno_nr) : StackException(strerror(errno_nr)) {}
 		SystemException(SystemException &&other) = default;
-		SystemException(const DefaultExcepCXXString &arg) : StackException(arg) {}
+		SystemException(const DefaultExcepCXXString &message) : StackException(message) {}
 		template <typename... Args>
-		SystemException(int errno_nr, const std::string &format, Args &&... args) : StackException(format, args...) {}
+		SystemException(int errno_nr, const DefaultExcepCXXString &format, Args &&... args)
+			: StackException(format, args...) {}
 	};
 
 } // namespace cxxexcept
