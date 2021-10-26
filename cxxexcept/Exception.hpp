@@ -44,8 +44,6 @@
 #define CXXEXCEPT_USE_BACKWARD
 #ifdef CXXEXCEPT_USE_BACKWARD
 // TODO add options for which backend.
-#define BACKWARD_HAS_BFD 1
-#define BACKWARD_HAS_UNWIND 1
 #include <backward.hpp>
 #define CXXEXCEPT_BACKWARD
 #endif
