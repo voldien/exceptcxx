@@ -77,8 +77,10 @@ namespace cxxexcept {
 
 #ifdef _CXXEXCEPT_USE_UNICODE
 	using ExceptionString = WString;
+	using ExceptionChar = wchar_t;
 #else
-	using ExceptionString = String;
+	using DefaultExcepCXXString = String;
+	using ExceptionChar = char;
 #endif
 
 	enum class StackColorPalette { StackColorNone, StackColorDefault, StackColorYellow, StackColorPink };
@@ -88,7 +90,7 @@ namespace cxxexcept {
 	 *
 	 * @tparam Text
 	 */
-	template <class Text> class IExceptionBackTrace {
+	template <typename Char, class Text = std::basic_string<Char>> class IExceptionBackTrace {
 	  public:
 	  public:
 		IExceptionBackTrace(void *stack_start_address) : stack_start_address(stack_start_address) {}
@@ -124,7 +126,7 @@ namespace cxxexcept {
 	 *
 	 * @tparam Text
 	 */
-	template <typename Text = ExceptionString> class ThrowableException : public std::exception {
+	template <typename Char, class Text = std::basic_string<Char>> class ThrowableException : public std::exception {
 	  public:
 		ThrowableException() {}
 
@@ -139,9 +141,10 @@ namespace cxxexcept {
 			char *className = abi::__cxa_demangle(getExceptionName(), nullptr, nullptr, nullptr);
 			if (className) {
 			}
-			Text strName(className);
+			std::string Strname(className);
 			free(className);
-			return strName;
+			Text exceptionName(Strname.begin(), Strname.end());
+			return exceptionName;
 		}
 
 	  public:
@@ -153,14 +156,14 @@ namespace cxxexcept {
 		 * @return Text
 		 */
 		// TODO: implement getcommandline
-		static String getCommandLine() noexcept {
+		static Text getCommandLine() noexcept {
 			String c;
 			std::ifstream cmd("/proc/self/cmdline");
 			std::getline(cmd, c);
 			cmd.close();
-			return c;
+			return Text(c.begin(), c.end());
 		}
-		static String getEnviornmentVariables() noexcept { return ""; }
+		static Text getEnviornmentVariables() noexcept { return static_cast<Text>(""); }
 
 		friend ThrowableException &operator>>(ThrowableException &ex, String &text) { return ex; }
 
@@ -173,9 +176,10 @@ namespace cxxexcept {
 	 *
 	 * @tparam Text
 	 */
-	template <class Text> class IExceptioBackwardBackTrace : public IExceptionBackTrace<Text> {
+	template <typename Char, class Text = std::basic_string<Char>>
+	class IExceptioBackwardBackTrace : public IExceptionBackTrace<Char> {
 	  public:
-		IExceptioBackwardBackTrace() : IExceptionBackTrace<Text>(nullptr) {
+		IExceptioBackwardBackTrace() : IExceptionBackTrace<Char>(nullptr) {
 			this->resolver = std::make_shared<backward::TraceResolver>();
 			this->stackTrace = std::make_shared<backward::StackTrace>();
 		}
@@ -222,8 +226,9 @@ namespace cxxexcept {
 			p.print(*stackTrace, stream);
 
 			/*	*/
-			String stackTraceStr = std::move(stream.str());
-			return stackTraceStr;
+			std::string stackTraceStr = stream.str();
+			Text stackTracestring(stackTraceStr.begin(), stackTraceStr.end());
+			return stackTracestring;
 		}
 
 	  private:
@@ -238,13 +243,11 @@ namespace cxxexcept {
 	template <class T> class ExceptionDefaultBackStackImpl {};
 #endif
 
-	// std::basic_string<Char>
-	// std::basic_string<Char>
-	// typename Char
-	template <class Text = ExceptionString, class BackTrace = ExceptionDefaultBackStackImpl<Text>>
-	class StackException : public ThrowableException<Text>, public BackTrace {
+	template <typename Char = ExceptionChar, class Text = std::basic_string<Char>,
+			  class BackTrace = ExceptionDefaultBackStackImpl<Char>>
+	class StackException : public ThrowableException<Char>, public BackTrace {
 		static_assert(std::is_object<Text>::value, "");
-		static_assert(std::is_base_of<IExceptionBackTrace<Text>, BackTrace>::value, "BackTrace Class be ");
+		static_assert(std::is_base_of<IExceptionBackTrace<Char>, BackTrace>::value, "BackTrace Class be ");
 		// TODO assert the backstrace impl class typr and etc.
 
 	  protected:
@@ -253,7 +256,7 @@ namespace cxxexcept {
 		}
 
 	  public:
-		StackException(const char *what) : StackException(std::move(Text(what))) {}
+		StackException(const Char *what) : StackException(std::move(Text(what))) {}
 		StackException(const Text &what) : StackException() { message = what; }
 		StackException(Text &&what) : StackException() { message = what; }
 		template <typename... Args>
@@ -264,7 +267,7 @@ namespace cxxexcept {
 		StackException(StackException &&) = default;
 		StackException &operator=(StackException &&) = default;
 
-		virtual const char *what() const noexcept override { return message.c_str(); }
+		virtual const char *what() const noexcept override { return (const char *)message.c_str(); }
 		// virtual const Text & what() const  { return message; }
 
 		friend std::istream &operator>>(std::istream &is, StackException &exception) { return is; }
@@ -309,9 +312,9 @@ namespace cxxexcept {
 	template <class U>
 	static String getStackMessage(const U &ex, PrintLevelOfInfo levelInfo = PrintLevelOfInfo::Minimal) noexcept {
 		static_assert(std::is_base_of<std::exception, U>::value, "Class Must be derived from std::exception");
-		const ThrowableException<String> *throwEx = dynamic_cast<const ThrowableException<String> *>(&ex);
-		const IExceptionBackTrace<String> *stackEx = dynamic_cast<const IExceptionBackTrace<String> *>(&ex);
-		std::ostringstream stream;
+		const ThrowableException<char> *throwEx = dynamic_cast<const ThrowableException<ExceptionChar> *>(&ex);
+		const IExceptionBackTrace<char> *stackEx = dynamic_cast<const IExceptionBackTrace<char> *>(&ex);
+		std::basic_ostringstream<char> stream;
 
 		/*	If */
 		if (throwEx) {
@@ -339,7 +342,7 @@ namespace cxxexcept {
 	 */
 	template <class T> static void printStackMessage(const T &ex) noexcept { std::cerr << getStackMessage<T>(ex); }
 
-	using CaptureException = ThrowableException<ExceptionString>;
+	using CaptureException = ThrowableException<ExceptionChar>;
 
 	class RuntimeException : public StackException<> {
 	  public:
@@ -358,9 +361,9 @@ namespace cxxexcept {
 		template <typename... Args>
 		PermissionDeniedException(const std::string &format, Args &&... args) : StackException(format, args...) {}
 	};
-	class DivideByZeroException : public StackException<int> {};
-	class IOException : public StackException<int> {};
-	class PermissionException : public StackException<int> {};
+	class DivideByZeroException : public StackException<> {};
+	class IOException : public StackException<> {};
+	class PermissionException : public StackException<> {};
 	class InvalidArgumentException : public StackException<> {
 	  public:
 		InvalidArgumentException() : StackException("Invalid Argument") {}
@@ -401,7 +404,7 @@ namespace cxxexcept {
 		SystemException() : SystemException(errno) {}
 		SystemException(int errno_nr) : StackException(strerror(errno_nr)) {}
 		SystemException(SystemException &&other) = default;
-		SystemException(const ExceptionString &arg) : StackException(arg) {}
+		SystemException(const DefaultExcepCXXString &arg) : StackException(arg) {}
 		template <typename... Args>
 		SystemException(int errno_nr, const std::string &format, Args &&... args) : StackException(format, args...) {}
 	};
