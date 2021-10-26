@@ -19,5 +19,5 @@ ADD_TEST(NAME UnitTesting
     COMMAND exceptionUnitTests)
 
 
-ADD_EXECUTABLE(exceptionTest execption.cpp)
+ADD_EXECUTABLE(exceptionTest throwExecption.cpp)
 TARGET_LINK_LIBRARIES(exceptionTest cxxexcept dl bfd)

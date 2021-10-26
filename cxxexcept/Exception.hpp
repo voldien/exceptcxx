@@ -224,7 +224,7 @@ namespace cxxexcept {
 	// std::basic_string<Char>
 	// std::basic_string<Char>
 	// typename Char
-	template <class T, class Text = ExceptionString, class BackTrace = ExceptionDefaultBackStackImpl<Text>>
+	template <class Text = ExceptionString, class BackTrace = ExceptionDefaultBackStackImpl<Text>>
 	class StackException : public ThrowableException<Text>, public BackTrace {
 		static_assert(std::is_object<Text>::value, "");
 		static_assert(std::is_base_of<IExceptionBackTrace<Text>, BackTrace>::value, "BackTrace Class be ");
@@ -295,12 +295,15 @@ namespace cxxexcept {
 		const ThrowableException<String> *throwEx = dynamic_cast<const ThrowableException<String> *>(&ex);
 		const IExceptionBackTrace<String> *stackEx = dynamic_cast<const IExceptionBackTrace<String> *>(&ex);
 		std::ostringstream stream;
+
 		/*	If */
 		if (throwEx) {
 			stream << throwEx->getName() << ": ";
 			stream << throwEx->what();
-			stream << throwEx->getEnviornmentVariables();
-			stream << throwEx->getCommandLine();
+			stream << throwEx->getEnviornmentVariables() << std::endl;
+			stream << throwEx->getCommandLine() << std::endl;
+
+			/*	If it has a exception backtrace.	*/
 			if (stackEx) {
 				stream << std::endl << stackEx->getBackTrace();
 			}
@@ -322,7 +325,7 @@ namespace cxxexcept {
 
 	using CaptureException = ThrowableException<ExceptionString>;
 
-	class RuntimeException : public StackException<int> {
+	class RuntimeException : public StackException<> {
 	  public:
 		RuntimeException() : StackException("RuntimeException") {}
 		RuntimeException(RuntimeException &&other) = default;
@@ -331,7 +334,7 @@ namespace cxxexcept {
 		RuntimeException(const std::string &format, Args &&... args) : StackException(format, args...) {}
 	};
 
-	class PermissionDeniedException : public StackException<int> {
+	class PermissionDeniedException : public StackException<> {
 	  public:
 		PermissionDeniedException() : StackException("PermissionDeniedException!") {}
 
@@ -342,7 +345,7 @@ namespace cxxexcept {
 	class DivideByZeroException : public StackException<int> {};
 	class IOException : public StackException<int> {};
 	class PermissionException : public StackException<int> {};
-	class InvalidArgumentException : public StackException<int> {
+	class InvalidArgumentException : public StackException<> {
 	  public:
 		InvalidArgumentException() : StackException("Invalid Argument") {}
 		InvalidArgumentException(InvalidArgumentException &&other) = default;
@@ -350,8 +353,8 @@ namespace cxxexcept {
 		template <typename... Args>
 		InvalidArgumentException(const std::string &format, Args &&... args) : StackException(format, args...) {}
 	};
-	class NotImplementedException : public StackException<int> {};
-	class NotSupportedException : public StackException<int> {
+	class NotImplementedException : public StackException<> {};
+	class NotSupportedException : public StackException<> {
 	  public:
 		NotSupportedException() : StackException("Not Supported") {}
 		NotSupportedException(NotSupportedException &&other) = default;
@@ -359,7 +362,7 @@ namespace cxxexcept {
 		template <typename... Args>
 		NotSupportedException(const std::string &format, Args &&... args) : StackException(format, args...) {}
 	};
-	class IndexOutOfRangeException : public StackException<int> {
+	class IndexOutOfRangeException : public StackException<> {
 	  public:
 		IndexOutOfRangeException() : StackException("IndexOutOfRangeException") {}
 		IndexOutOfRangeException(IndexOutOfRangeException &&other) = default;
@@ -367,7 +370,7 @@ namespace cxxexcept {
 		template <typename... Args>
 		IndexOutOfRangeException(const std::string &format, Args &&... args) : StackException(format, args...) {}
 	};
-	class InvalidPointerException : public StackException<int> {
+	class InvalidPointerException : public StackException<> {
 	  public:
 		InvalidPointerException() : StackException("IndexOutOfRangeException") {}
 		InvalidPointerException(InvalidPointerException &&other) = default;
@@ -377,7 +380,7 @@ namespace cxxexcept {
 	};
 
 	// TODO determine if shall be renamed to ErrnoException
-	class SystemException : public StackException<int> {
+	class SystemException : public StackException<> {
 	  public:
 		SystemException() : SystemException(errno) {}
 		SystemException(int errno_nr) : StackException(strerror(errno_nr)) {}

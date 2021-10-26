@@ -25,7 +25,7 @@ jobs:
         - os: ubuntu-latest
           platform: x32
           compiler: gcc
-    name: Core
+    name: Exception Library
     steps:
       - uses: actions/checkout@v2
         with:
