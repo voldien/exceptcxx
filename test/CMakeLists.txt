@@ -10,7 +10,7 @@ ELSE()
 ENDIF()
 
 ADD_EXECUTABLE(exceptionUnitTests ExceptionUnitTests.cpp)
-TARGET_LINK_LIBRARIES(exceptionUnitTests PUBLIC cxxexcept ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES} pthread)
+TARGET_LINK_LIBRARIES(exceptionUnitTests PUBLIC cxxexcept ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES} pthread bfd)
 TARGET_INCLUDE_DIRECTORIES(exceptionUnitTests PRIVATE ${GTEST_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR} )
 ADD_DEPENDENCIES(exceptionUnitTests cxxexcept)
 
