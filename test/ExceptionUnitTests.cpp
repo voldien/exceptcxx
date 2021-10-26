@@ -5,16 +5,16 @@ TEST(ThrowException, Throwable_Create_Unicode8_Throw_No_Exception) {
 	ASSERT_NO_THROW(cxxexcept::ThrowableException<char>());
 }
 
-// TEST(ThrowException, Throwable_Create_Unicode16_Throw_No_Exception) {
-// 	ASSERT_NO_THROW(cxxexcept::ThrowableException<wchar_t>());
-// }
+TEST(ThrowException, Throwable_Create_Unicode16_Throw_No_Exception) {
+	ASSERT_NO_THROW(cxxexcept::ThrowableException<wchar_t>());
+}
 
 TEST(ThrowException, StackException_Unicode8_Create_Throw_No_Exception) {
 	ASSERT_NO_THROW(cxxexcept::StackException<char>(""));
 }
-// TEST(ThrowException, StackException_Unicode16_Create_Throw_No_Exception) {
-// 	ASSERT_NO_THROW(cxxexcept::StackException<wchar_t>(L""));
-// }
+TEST(ThrowException, StackException_Unicode16_Create_Throw_No_Exception) {
+	ASSERT_NO_THROW(cxxexcept::StackException<wchar_t>(L""));
+}
 
 TEST(ThrowException, StackException) {
 	ASSERT_THROW(throw cxxexcept::StackException<>(""), cxxexcept::StackException<>);
