@@ -1,8 +1,24 @@
-/**
-	CxxExcept - Universal Exception Library
-	Copyright (C) 2021  Valdemar Lindberg
-
-*/
+/*
+ * Copyright (c) 2021 Valdemar Lindberg
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 #ifndef _CXX_EXECPT_CXX_H_
 #define _CXX_EXECPT_CXX_H_ 1
 
@@ -10,7 +26,6 @@
 
 #endif
 
-//#include <bfd.h>
 #include <cstdlib>
 // TODO check if conditional.
 #include <cerrno>
@@ -140,7 +155,9 @@ namespace cxxexcept {
 		// TODO: implement getcommandline
 		static String getCommandLine() noexcept {
 			String c;
-			// std::ifstream("/proc/self/cmdline").read(c, c.size());
+			std::ifstream cmd("/proc/self/cmdline");
+			std::getline(cmd, c);
+			cmd.close();
 			return c;
 		}
 		static String getEnviornmentVariables() noexcept { return ""; }
@@ -298,10 +315,9 @@ namespace cxxexcept {
 
 		/*	If */
 		if (throwEx) {
-			stream << throwEx->getName() << ": ";
-			stream << throwEx->what();
-			stream << throwEx->getEnviornmentVariables() << std::endl;
-			stream << throwEx->getCommandLine() << std::endl;
+			stream << throwEx->getName() << ": " << throwEx->what() << std::endl;
+			stream << "Environment Variables: " << throwEx->getEnviornmentVariables() << std::endl;
+			stream << "Command: " << throwEx->getCommandLine() << std::endl;
 
 			/*	If it has a exception backtrace.	*/
 			if (stackEx) {
