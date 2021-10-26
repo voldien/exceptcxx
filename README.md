@@ -1,8 +1,8 @@
 # ExecptCXX
 
-[![CxxExecpt](https://github.com/voldien/execptcxx/actions/workflows/linux-build.yml/badge.svg)](https://github.com/voldien/execptcxx/actions/workflows/linux-build.yml)
-[![GitHub release](https://img.shields.io/github/release/voldien/execptcxx.svg)](https://github.com/voldien/execptcxx/releases)
-[![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/voldien/execptcxx.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/voldien/execptcxx/context:cpp)
+[![CxxExecpt](https://github.com/voldien/exceptcxx/actions/workflows/linux-build.yml/badge.svg)](https://github.com/voldien/exceptcxx/actions/workflows/linux-build.yml)
+[![GitHub release](https://img.shields.io/github/release/voldien/exceptcxx.svg)](https://github.com/voldien/exceptcxx/releases)
+[![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/voldien/exceptcxx.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/voldien/exceptcxx/context:cpp)
 
 A simple library for adding exception with additional meta than the common std::exception while preserving the code.
 
