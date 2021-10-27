@@ -4,12 +4,12 @@
 [![GitHub release](https://img.shields.io/github/release/voldien/exceptcxx.svg)](https://github.com/voldien/exceptcxx/releases)
 [![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/voldien/exceptcxx.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/voldien/exceptcxx/context:cpp)
 
-A simple library for adding exception with additional meta than the common std::exception while preserving the code.
+A simple library for adding exceptions with additional meta than the common std::exception while preserving the code.
 
 ## Features
 
 * StackTrace - Support to get the stack tree of when it was invoked.
-* Unicode - Allow support for both ASCII, Unicode8 and unicode 16.
+* Unicode - Allow support for both ASCII, Unicode 8, and unicode 16.
 
 ## Motivation
 
@@ -29,7 +29,7 @@ make
 
 ### Integration with CMake
 
-The idea is to be able integrate this library with other project easily. With CMake, it basically requires 2 lines. On for adding the project and second for adding it as a dependent linked library target.
+The idea is to be able to integrate this library with another project easily. With CMake, it basically requires 2 lines. One for adding the project and the second for adding it as a dependent linked library target.
 
 ```cmake
 ADD_SUBDIRECTORY(exceptCXX EXCLUDE_FROM_ALL)
@@ -39,13 +39,18 @@ ADD_SUBDIRECTORY(exceptCXX EXCLUDE_FROM_ALL)
 TARGET_LINK_LIBRARIES(myTarget PUBLIC cxxexcept)
 ```
 
+## Dependencies
 
-## Dependices
+The dependices currently is related to backward-cpp
 
-binutils-dev
-
+```bash
+apt install binutils-dev
+```
 
 # Examples
+
+The following is a simple example for throwing an exception, followed by printing a formated
+error message to stdout.
 
 ```cpp
 try {
