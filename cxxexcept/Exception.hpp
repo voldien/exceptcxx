@@ -265,7 +265,7 @@ namespace cxxexcept {
 		StackException(StackException &&) = default;
 		StackException &operator=(StackException &&) = default;
 
-		virtual const char *what() const noexcept override { return (const char *)message.c_str(); }
+		virtual const char *what() const noexcept override { return static_cast<const char *>(message.c_str()); }
 		// virtual const Text & what() const  { return message; }
 
 		friend std::istream &operator>>(std::istream &is, StackException &exception) { return is; }
@@ -408,7 +408,8 @@ namespace cxxexcept {
 		SystemException(SystemException &&other) = default;
 		SystemException(const DefaultExcepCXXString &message) : StackException(message) {}
 		template <typename... Args>
-		SystemException(int errno_nr, const DefaultExcepCXXString &format, Args &&... args)
+		SystemException(int errno_nr, const std::error_category &ecat, const DefaultExcepCXXString &format,
+						Args &&... args)
 			: StackException(format, args...) {}
 	};
 
