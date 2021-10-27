@@ -1,4 +1,4 @@
-name: CxxExecpt - Window Build
+name: ExceptCxx - Window Build
 on: [push,pull_request]
 
 env:
@@ -9,8 +9,8 @@ jobs:
   Window:
     # Windows 10 with latest image
     runs-on: "windows-latest"
-    # Windows Editor - checkout with the plugin
-    name: Exception Library
+    
+    name: C++ Exception Library
 
     steps:
       - uses: actions/checkout@v2
@@ -45,4 +45,4 @@ jobs:
         shell: bash
         # Execute tests defined by the CMake configuration.
         # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-        run: ctest -C $BUILD_TYPE
+        run: ctest -C $BUILD_TYPE --output-on-failure --verbose
