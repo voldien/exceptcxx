@@ -9,13 +9,20 @@ jobs:
   Window:
     # Windows 10 with latest image
     runs-on: "windows-latest"
-    
+
     name: C++ Exception Library
 
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: "recursive"
+
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v1.0.2
+
+      - name: Install NuGet packages
+        working-directory: ${{env.GITHUB_WORKSPACE}}
+        run: nuget install googletest -Version 1.8.3
 
       - name: Create Build Environment
         # Some projects don't allow in-source building, so create a separate build directory
