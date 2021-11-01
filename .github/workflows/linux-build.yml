@@ -50,8 +50,8 @@ jobs:
         # Note the current convention is to use the -S and -B options here to specify source
         # and build directories, but this is only available with CMake 3.13 and higher.
         # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
-		env:
-			CC: ${{ matrix.compiler }}
+        env:
+          CC: ${{ matrix.compiler }}
         run: |
           cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCXXEXCEPT_BUILD_WITH_TEST=ON -DCXXEXCEPT_BUILD_WITH_UBSAN=ON \
           -DCXXEXCEPT_BUILD_WITH_ASAN=ON -DCXXEXCEPT_BUILD_WITH_INSTALL=OFF -DCXXEXCEPT_BUILD_OPT_BUILD_PACKAGES=ON
