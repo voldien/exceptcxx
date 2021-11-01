@@ -12,6 +12,7 @@ jobs:
         os: [ubuntu-latest]
         platform: [x32, x64]
         compiler: [gcc, clang]
+        flavor: [ RelWithDebInfo, Coverage ]
         include:
         - os: ubuntu-latest
           platform: x64

@@ -34,6 +34,11 @@ TEST(ThrowException, StackException_CommandLine_None_Empty) {
 	ASSERT_FALSE(ex.getCommandLine().empty());
 }
 
+TEST(ThrowException, StackException_CommandLine_Correct) {
+	cxxexcept::StackException<> ex("");
+	ASSERT_EQ(ex.getCommandLine(), "exceptionUnitTests");
+}
+
 class ExceptionNameTest : public ::testing::TestWithParam<std::tuple<std::string>> {
   public:
 	void throwException(const std::string &name) {

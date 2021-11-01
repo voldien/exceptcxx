@@ -90,7 +90,6 @@ namespace cxxexcept {
 	 */
 	template <typename Char, class Text = std::basic_string<Char>> class IExceptionBackTrace {
 	  public:
-	  public:
 		IExceptionBackTrace(void *stack_start_address) : stack_start_address(stack_start_address) {}
 		virtual ~IExceptionBackTrace() = default;
 		/**
@@ -137,7 +136,8 @@ namespace cxxexcept {
 
 		virtual Text getName() const {
 			char *className = abi::__cxa_demangle(getExceptionName(), nullptr, nullptr, nullptr);
-			if (className) {
+			if (className == nullptr) {
+				className = (char *)(getExceptionName());
 			}
 			std::string Strname(className);
 			free(className);
@@ -146,7 +146,6 @@ namespace cxxexcept {
 		}
 
 	  public:
-		/// proc/self/cmdline
 		// GetCommandLineA
 		/**
 		 * @brief Get the Command Line object
@@ -155,6 +154,9 @@ namespace cxxexcept {
 		 */
 		// TODO: implement getcommandline
 		static Text getCommandLine() noexcept {
+#if CXXEXCEPT_UNIX
+#else
+#endif
 			String c;
 			std::ifstream cmd("/proc/self/cmdline");
 			std::getline(cmd, c);
@@ -265,7 +267,14 @@ namespace cxxexcept {
 		StackException(StackException &&) = default;
 		StackException &operator=(StackException &&) = default;
 
-		virtual const char *what() const noexcept override { return static_cast<const char *>(message.c_str()); }
+		virtual const char *what() const noexcept override {
+			if constexpr (std::is_same<Char, char>::value) {
+				return message.c_str();
+			} else {
+				// TODO convert to
+				return static_cast<const char *>("");
+			}
+		}
 		// virtual const Text & what() const  { return message; }
 
 		friend std::istream &operator>>(std::istream &is, StackException &exception) { return is; }

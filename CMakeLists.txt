@@ -182,7 +182,9 @@ ENDIF()
 
 
 # Inlucde external resources.
-ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/extern/backward-cpp)
+IF(CXXEXCEPT_BUILD_WITH_EXTERNAL_PROJECT)
+	ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/extern/backward-cpp)
+ENDIF(CXXEXCEPT_BUILD_WITH_EXTERNAL_PROJECT)
 
 
 SET(CXXEXCEPT_SRC
@@ -193,7 +195,7 @@ ADD_LIBRARY(cxxexcept INTERFACE)
 
 # Required c++ features - use to determine what C++ version is required
 TARGET_COMPILE_FEATURES(cxxexcept INTERFACE cxx_constexpr cxx_noexcept cxx_override
-	cxx_sizeof_member cxx_static_assert cxx_decltype cxx_defaulted_functions
+	cxx_sizeof_member cxx_static_assert cxx_decltype cxx_defaulted_functions cxx_relaxed_constexpr
 	cxx_default_function_template_args)
 
 TARGET_INCLUDE_DIRECTORIES (cxxexcept
@@ -203,7 +205,7 @@ TARGET_INCLUDE_DIRECTORIES (cxxexcept
 )
 # Set predefined macro for version.
 TARGET_COMPILE_DEFINITIONS(cxxexcept INTERFACE CXXE_VERSION="${CXXEXCEPT_PROJECT_VERSION}")
-TARGET_LINK_LIBRARIES(cxxexcept INTERFACE backward fmt dl bfd)
+TARGET_LINK_LIBRARIES(cxxexcept INTERFACE backward fmt dl)
 
 # # Install the header file and export the target
 #install(TARGETS cxxexcept EXPORT ${targets_export_name} DESTINATION lib)
