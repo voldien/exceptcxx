@@ -365,7 +365,6 @@ namespace cxxexcept {
 	};
 	class DivideByZeroException : public StackException<> {};
 	class IOException : public StackException<> {};
-	class PermissionException : public StackException<> {};
 	class InvalidArgumentException : public StackException<> {
 	  public:
 		InvalidArgumentException() : StackException("Invalid Argument") {}
@@ -413,7 +412,9 @@ namespace cxxexcept {
 		template <typename... Args>
 		SystemException(int errno_nr, const std::error_category &ecat, const DefaultExcepCXXString &format,
 						Args &&... args)
-			: StackException(format, args...) {}
+			: StackException(format, args...) {
+			// Generate message based on the error values.
+		}
 
 		virtual const char *what() const noexcept override { return ""; }
 	};

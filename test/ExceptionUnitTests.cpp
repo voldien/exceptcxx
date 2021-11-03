@@ -59,7 +59,7 @@ REGISTER_TYPED_TEST_SUITE_P(ExceptionTypeTest, DefaultConstructor, Throw_Correct
 
 using DefaultExceptionTypes =
 	::testing::Types<cxxexcept::RuntimeException, cxxexcept::PermissionDeniedException,
-					 cxxexcept::DivideByZeroException, cxxexcept::IOException, cxxexcept::PermissionException,
+					 cxxexcept::DivideByZeroException, cxxexcept::IOException,
 					 cxxexcept::InvalidArgumentException, cxxexcept::NotImplementedException>;
 INSTANTIATE_TYPED_TEST_SUITE_P(DefualtExceptionTypes, ExceptionTypeTest, DefaultExceptionTypes);
 
@@ -78,8 +78,6 @@ class ExceptionNameTest : public ::testing::TestWithParam<std::tuple<std::string
 			throw cxxexcept::DivideByZeroException();
 		else if (name == "IOException")
 			throw cxxexcept::IOException();
-		else if (name == "PermissionException")
-			throw cxxexcept::PermissionException();
 		else if (name == "NotImplementedException")
 			throw cxxexcept::NotImplementedException();
 	}
