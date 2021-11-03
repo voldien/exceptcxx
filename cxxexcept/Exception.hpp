@@ -250,7 +250,7 @@ namespace cxxexcept {
 		static_assert(std::is_base_of<IExceptionBackTrace<Char>, BackTrace>::value, "BackTrace Class be ");
 		// TODO assert the backstrace impl class typr and etc.
 
-	  protected:
+	  public:
 		StackException() {
 			// TODO save the start address to start stacking from.
 		}
@@ -362,7 +362,7 @@ namespace cxxexcept {
 
 	class PermissionDeniedException : public StackException<> {
 	  public:
-		PermissionDeniedException() : StackException("PermissionDeniedException!") {}
+		PermissionDeniedException() : StackException("PermissionDeniedException") {}
 
 		PermissionDeniedException(const DefaultExcepCXXString &arg) : StackException(arg) {}
 		template <typename... Args>
@@ -420,6 +420,8 @@ namespace cxxexcept {
 		SystemException(int errno_nr, const std::error_category &ecat, const DefaultExcepCXXString &format,
 						Args &&... args)
 			: StackException(format, args...) {}
+
+		virtual const char *what() const noexcept override { return ""; }
 	};
 
 } // namespace cxxexcept

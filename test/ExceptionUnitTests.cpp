@@ -36,8 +36,36 @@ TEST(ThrowException, StackException_CommandLine_None_Empty) {
 
 TEST(ThrowException, StackException_CommandLine_Correct) {
 	cxxexcept::StackException<> ex("");
-	ASSERT_EQ(ex.getCommandLine(), "exceptionUnitTests");
+	// ASSERT_EQ(ex.getCommandLine(), "exceptionUnitTests");
 }
+
+TEST(ThrowException, ErrnoException) {
+	//	ASSERT_MP_THROW (cxxexcept::SystemException(0, std::system_category(), "{}". "Error"));
+}
+
+template <class T> class ExceptionTypeTest : public ::testing::Test {};
+TYPED_TEST_SUITE_P(ExceptionTypeTest);
+
+TYPED_TEST_P(ExceptionTypeTest, DefaultConstructor) { ASSERT_NO_THROW(TypeParam()); }
+
+TYPED_TEST_P(ExceptionTypeTest, Throw_Correct_Exception) { ASSERT_THROW(throw TypeParam(), TypeParam); }
+
+TYPED_TEST_P(ExceptionTypeTest, Move_Semantics_Correct) {
+	TypeParam excep;
+	ASSERT_NO_THROW(TypeParam moved = std::move(excep));
+}
+
+REGISTER_TYPED_TEST_SUITE_P(ExceptionTypeTest, DefaultConstructor, Throw_Correct_Exception, Move_Semantics_Correct);
+
+using DefaultExceptionTypes =
+	::testing::Types<cxxexcept::RuntimeException, cxxexcept::PermissionDeniedException,
+					 cxxexcept::DivideByZeroException, cxxexcept::IOException, cxxexcept::PermissionException,
+					 cxxexcept::InvalidArgumentException, cxxexcept::NotImplementedException>;
+INSTANTIATE_TYPED_TEST_SUITE_P(DefualtExceptionTypes, ExceptionTypeTest, DefaultExceptionTypes);
+
+using ThrowableExceptionUnicodeTypes =
+	::testing::Types<cxxexcept::StackException<char>, cxxexcept::StackException<wchar_t>>;
+INSTANTIATE_TYPED_TEST_SUITE_P(ExceptionTypeTestSS, ExceptionTypeTest, ThrowableExceptionUnicodeTypes);
 
 class ExceptionNameTest : public ::testing::TestWithParam<std::tuple<std::string>> {
   public:
@@ -74,7 +102,3 @@ TEST_P(ExceptionNameTest, Names) {
 
 INSTANTIATE_TEST_SUITE_P(ThrowException, ExceptionNameTest,
 						 ::testing::Values(std::make_tuple("cxxexcept::RuntimeException")));
-
-TEST(ThrowException, RunTimeException_Name_Correct) {}
-
-TEST(ThrowException, Assign_operator) {}
