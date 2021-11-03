@@ -164,12 +164,17 @@ ELSEIF ( "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" )
 ELSEIF(MSVC)
 	# Enable multi-core compilation with MSVC
 	IF( "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" ) # clang-cl
-		ADD_COMPILE_OPTIONS(/bigobj /W4 /WX )
+		ADD_COMPILE_OPTIONS(/bigobj /W4)
 	ELSE() # msvc
-		ADD_COMPILE_OPTIONS(/MP /bigobj /W4 /WX)
+		ADD_COMPILE_OPTIONS(/MP /bigobj /W4)
+	ENDIF()
+	IF(NOT (MSVC_VERSION LESS 1900))
+		# Multibyte character set is deprecated since at least MSVC2015 (possibly earlier)
+		ADD_DEFINITIONS( -DUNICODE -D_UNICODE )
 	ENDIF()
 
 	SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /D_DEBUG /Zi /Od")
+
 ELSEIF ( "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" )
 	SET(CMAKE_CXX_FLAGS "-g -fvisibility=hidden -fno-strict-aliasing -Wall -Wno-long-long ${CMAKE_CXX_FLAGS}" )
 	SET(CMAKE_C_FLAGS "-fno-strict-aliasing ${CMAKE_C_FLAGS}")
