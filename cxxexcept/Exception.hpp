@@ -70,8 +70,8 @@ namespace cxxexcept {
 	// TODO add verison value.
 
 	// TODO check if need to handle unicode, locale and etc.
-	typedef std::string String;
-	typedef std::wstring WString;
+	using String = std::string;
+	using WString = std::wstring;
 
 #ifdef _CXXEXCEPT_USE_UNICODE
 	using ExceptionString = WString;
@@ -124,6 +124,9 @@ namespace cxxexcept {
 	 * @tparam Text
 	 */
 	template <typename Char, class Text = std::basic_string<Char>> class ThrowableException : public std::exception {
+	  public:
+		using ExceptionText = Text;
+
 	  public:
 		ThrowableException() {}
 
@@ -242,6 +245,7 @@ namespace cxxexcept {
 	class StackException : public ThrowableException<Char>, public BackTrace {
 		static_assert(std::is_object<Text>::value, "");
 		static_assert(std::is_base_of<IExceptionBackTrace<Char>, BackTrace>::value, "BackTrace Class be ");
+		static_assert(std::is_base_of<Text, std::basic_string<Char>>::value, "");
 		// TODO assert the backstrace impl class typr and etc.
 
 	  public:
@@ -251,8 +255,8 @@ namespace cxxexcept {
 
 	  public:
 		StackException(const Char *what) : StackException(std::move(Text(what))) {}
-		StackException(const Text &what) : StackException() { message = what; }
-		StackException(Text &&what) : StackException() { message = what; }
+		StackException(const Text &what) : StackException() { this->setMessage(what); }
+		StackException(Text &&what) : StackException() { this->setMessage(what); }
 		template <typename... Args>
 		StackException(const Text &format, Args &&... args) : StackException(std::move(fmt::format(format, args...))) {}
 
@@ -261,15 +265,7 @@ namespace cxxexcept {
 		StackException(StackException &&) = default;
 		StackException &operator=(StackException &&) = default;
 
-		virtual const char *what() const noexcept override {
-			if constexpr (std::is_same<Char, char>::value) {
-				return message.c_str();
-			} else {
-				// TODO convert to
-				return static_cast<const char *>("");
-			}
-		}
-		// virtual const Text & what() const  { return message; }
+		virtual const char *what() const noexcept override { return message.c_str(); }
 
 		friend std::istream &operator>>(std::istream &is, StackException &exception) { return is; }
 		friend std::ostream &operator<<(std::ostream &os, const StackException &exception) {
@@ -288,8 +284,16 @@ namespace cxxexcept {
 			std::cout << ex.what() << ex.getStackTree();
 		}
 
+		void setMessage(const Text &text) {
+			if constexpr (std::is_same<Text, String>::value) {
+				this->message = text;
+			} else {
+				this->message = String(text.begin(), text.end());
+			}
+		}
+
 	  private:
-		Text message;
+		String message;
 	};
 
 	// TODO rename
@@ -417,6 +421,10 @@ namespace cxxexcept {
 		}
 
 		virtual const char *what() const noexcept override { return ""; }
+
+	  protected:
+		void generateMessage(const ExceptionText &text) {}
+		String errorMessage;
 	};
 
 } // namespace cxxexcept
