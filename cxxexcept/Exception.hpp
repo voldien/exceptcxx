@@ -138,14 +138,18 @@ namespace cxxexcept {
 		const char *getExceptionName() const noexcept { return typeid(*this).name(); }
 
 		virtual Text getName() const {
-			char *className = abi::__cxa_demangle(getExceptionName(), nullptr, nullptr, nullptr);
+			const char *exceptionName = this->getExceptionName();
+			char *className = abi::__cxa_demangle(exceptionName, nullptr, nullptr, nullptr);
 			if (className == nullptr) {
-				className = (char *)(getExceptionName());
-			}
-			std::string Strname(className);
-			free(className);
-			Text exceptionName(Strname.begin(), Strname.end());
-			return exceptionName;
+				std::string Strname(exceptionName);
+				Text exceptionName(Strname.begin(), Strname.end());
+				return exceptionName;
+			} else {
+				std::string Strname(className);
+				free(className);
+				Text exceptionName(Strname.begin(), Strname.end());
+				return exceptionName;
+			};
 		}
 
 	  public:
@@ -412,19 +416,26 @@ namespace cxxexcept {
 		SystemException() : SystemException(errno) {}
 		SystemException(int errno_nr) : StackException(strerror(errno_nr)) {}
 		SystemException(SystemException &&other) = default;
-		SystemException(const DefaultExcepCXXString &message) : StackException(message) {}
+		SystemException(const ExceptionText &message) : StackException(message) {}
 		template <typename... Args>
 		SystemException(int errno_nr, const std::error_category &ecat, const DefaultExcepCXXString &format,
 						Args &&... args)
 			: StackException(format, args...) {
+			this->errnoStrMsg = std::strerror(errno_nr);
 			// Generate message based on the error values.
+			this->generateMessage("", ecat);
 		}
 
-		virtual const char *what() const noexcept override { return ""; }
+		virtual const char *what() const noexcept override { return errorMessage.c_str(); }
 
 	  protected:
-		void generateMessage(const ExceptionText &text) {}
+		void generateMessage(const ExceptionText &text, const std::error_category &ecat) {
+			errorMessage =
+
+				fmt::format("{} {} {}", StackException<>::what(), errnoStrMsg);
+		}
 		String errorMessage;
+		const char *errnoStrMsg;
 	};
 
 } // namespace cxxexcept
