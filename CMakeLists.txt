@@ -216,7 +216,7 @@ TARGET_INCLUDE_DIRECTORIES (cxxexcept
 )
 # Set predefined macro for version.
 TARGET_COMPILE_DEFINITIONS(cxxexcept INTERFACE CXXE_VERSION="${CXXEXCEPT_PROJECT_VERSION}")
-TARGET_LINK_LIBRARIES(cxxexcept INTERFACE backward dl fmt)
+TARGET_LINK_LIBRARIES(cxxexcept INTERFACE backward dl fmt ${BACKWARD_LIBRARIES})
 
 # # Install the header file and export the target
 #install(TARGETS cxxexcept EXPORT ${targets_export_name} DESTINATION lib)
