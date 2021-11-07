@@ -125,9 +125,9 @@ namespace cxxexcept {
 	 */
 	template <typename Char, class Text = std::basic_string<Char>> class ThrowableException : public std::exception {
 	  public:
+		using ExceptionChar = Char;
 		using ExceptionText = Text;
 
-	  public:
 		ThrowableException() {}
 
 		ThrowableException(const ThrowableException &) = default;
@@ -140,19 +140,18 @@ namespace cxxexcept {
 		virtual Text getName() const {
 			const char *exceptionName = this->getExceptionName();
 			char *className = abi::__cxa_demangle(exceptionName, nullptr, nullptr, nullptr);
+			Text _finalExceptionName;
 			if (className == nullptr) {
 				std::string Strname(exceptionName);
-				Text exceptionName(Strname.begin(), Strname.end());
-				return exceptionName;
+				_finalExceptionName = Text(Strname.begin(), Strname.end());
 			} else {
 				std::string Strname(className);
 				free(className);
-				Text exceptionName(Strname.begin(), Strname.end());
-				return exceptionName;
+				_finalExceptionName = Text(Strname.begin(), Strname.end());
 			};
+			return _finalExceptionName;
 		}
 
-	  public:
 		// GetCommandLineA
 		/**
 		 * @brief Get the Command Line object
@@ -213,17 +212,19 @@ namespace cxxexcept {
 
 			/*	Extract stack.	*/
 			//	int si = stackTrace->load_here(stackDepth);
-			if (this->getStackStartAddress() != nullptr)
+			if (this->getStackStartAddress() != nullptr) {
 				stackTrace->load_from(this->getStackStartAddress(), stackDepth);
-			else
+			} else {
 				stackTrace->load_here(stackDepth);
+			}
 			resolver->load_stacktrace(*stackTrace);
 
 			/*	Generate the print message.	*/
 			std::ostringstream stream;
 			backward::Printer p;
-			if (colorPalette == StackColorPalette::StackColorDefault)
+			if (colorPalette == StackColorPalette::StackColorDefault) {
 				p.color_mode = backward::ColorMode::type::always;
+			}
 			p.print(*stackTrace, stream);
 
 			/*	*/
@@ -257,7 +258,6 @@ namespace cxxexcept {
 			// TODO save the start address to start stacking from.
 		}
 
-	  public:
 		StackException(const Char *what) : StackException(std::move(Text(what))) {}
 		StackException(const Text &what) : StackException() { this->setMessage(what); }
 		StackException(Text &&what) : StackException() { this->setMessage(what); }
@@ -328,8 +328,8 @@ namespace cxxexcept {
 		/*	If */
 		if (throwEx) {
 			stream << throwEx->getName() << ": " << throwEx->what() << std::endl;
-			stream << "Environment Variables: " << throwEx->getEnviornmentVariables() << std::endl;
-			stream << "Command: " << throwEx->getCommandLine() << std::endl;
+			stream << "Environment Variables: " << ThrowableException<char>::getEnviornmentVariables() << std::endl;
+			stream << "Command: " << ThrowableException<char>::getCommandLine() << std::endl;
 
 			/*	If it has a exception backtrace.	*/
 			if (stackEx) {
