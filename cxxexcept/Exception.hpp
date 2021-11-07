@@ -171,8 +171,6 @@ namespace cxxexcept {
 		}
 		static Text getEnviornmentVariables() noexcept { return static_cast<Text>(""); }
 
-		friend ThrowableException &operator>>(ThrowableException &ex, String &text) { return ex; }
-
 	  private:
 	};
 
@@ -271,7 +269,6 @@ namespace cxxexcept {
 
 		virtual const char *what() const noexcept override { return message.c_str(); }
 
-		friend std::istream &operator>>(std::istream &is, StackException &exception) { return is; }
 		friend std::ostream &operator<<(std::ostream &os, const StackException &exception) {
 			os << exception.what();
 			return os;
@@ -316,7 +313,6 @@ namespace cxxexcept {
 	 * @tparam U
 	 * @param ex
 	 * @param levelInfo
-	 * @return String
 	 */
 	template <class U>
 	static String getStackMessage(const U &ex, PrintLevelOfInfo levelInfo = PrintLevelOfInfo::Minimal) noexcept {
@@ -327,7 +323,9 @@ namespace cxxexcept {
 
 		/*	If */
 		if (throwEx) {
-			stream << throwEx->getName() << ": " << throwEx->what() << std::endl;
+			if (levelInfo == PrintLevelOfInfo::Minimal) {
+				stream << throwEx->getName() << ": " << throwEx->what() << std::endl;
+			}
 			stream << "Environment Variables: " << ThrowableException<char>::getEnviornmentVariables() << std::endl;
 			stream << "Command: " << ThrowableException<char>::getCommandLine() << std::endl;
 
@@ -432,7 +430,7 @@ namespace cxxexcept {
 		void generateMessage(const ExceptionText &text, const std::error_category &ecat) {
 			errorMessage =
 
-				fmt::format("{} {} {}", StackException<>::what(), errnoStrMsg);
+				fmt::format("{} {} {}", text, ecat.name(), errnoStrMsg);
 		}
 		String errorMessage;
 		const char *errnoStrMsg;
