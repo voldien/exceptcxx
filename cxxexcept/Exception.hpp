@@ -52,9 +52,12 @@
 #include <optional>
 #define CXXEXCEPT_HAS_OPTIONAL
 #endif
+#if defined(__unix__) || defined(__unix) || defined(unix) /*  Unix    */
+#include <unistd.h>
+#define CXXEXCEPT_UNIX
+#endif
 
 #if defined(__linux) || defined(__linux__)
-#include <unistd.h>
 #ifdef CXXEXCEPT_LINUX
 #endif
 #endif
@@ -160,14 +163,16 @@ namespace cxxexcept {
 		 */
 		// TODO: implement getcommandline
 		static Text getCommandLine() noexcept {
-#if CXXEXCEPT_UNIX
-#else
-#endif
+#ifdef CXXEXCEPT_UNIX
+
 			String c;
 			std::ifstream cmd("/proc/self/cmdline");
 			std::getline(cmd, c);
 			cmd.close();
 			return Text(c.begin(), c.end());
+#else
+			return Text();
+#endif
 		}
 		static Text getEnviornmentVariables() noexcept { return static_cast<Text>(""); }
 
@@ -194,12 +199,12 @@ namespace cxxexcept {
 		IExceptioBackwardBackTrace(IExceptioBackwardBackTrace &&other) = default;
 		IExceptioBackwardBackTrace &operator=(IExceptioBackwardBackTrace &&other) = default;
 
-		virtual Text
+		Text
 		getBackTrace(StackColorPalette colorPalette = StackColorPalette::StackColorDefault) const noexcept override {
 			return getStackTree(-1, colorPalette);
 		}
 
-		virtual Text
+		Text
 		getStackTree(int stackDepth,
 					 StackColorPalette colorPalette = StackColorPalette::StackColorDefault) const noexcept override {
 
@@ -267,7 +272,7 @@ namespace cxxexcept {
 		StackException(StackException &&) = default;
 		StackException &operator=(StackException &&) = default;
 
-		virtual const char *what() const noexcept override { return message.c_str(); }
+		const char *what() const noexcept override { return message.c_str(); }
 
 		friend std::ostream &operator<<(std::ostream &os, const StackException &exception) {
 			os << exception.what();
@@ -424,7 +429,7 @@ namespace cxxexcept {
 			this->generateMessage("", ecat);
 		}
 
-		virtual const char *what() const noexcept override { return errorMessage.c_str(); }
+		const char *what() const noexcept override { return errorMessage.c_str(); }
 
 	  protected:
 		void generateMessage(const ExceptionText &text, const std::error_category &ecat) {
