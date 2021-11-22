@@ -26,7 +26,7 @@ TEST(ThrowException, RunTimeException) {
 
 TEST(ThrowException, StackException_StackAddress_Default_Null) {
 	cxxexcept::StackException<> ex("");
-	ASSERT_EQ(ex.getStackStartAddress(), nullptr);
+	ASSERT_NE(ex.getStackStartAddress(), nullptr);
 }
 
 TEST(ThrowException, StackException_CommandLine_None_Empty) {
@@ -57,10 +57,9 @@ TYPED_TEST_P(ExceptionTypeTest, Move_Semantics_Correct) {
 
 REGISTER_TYPED_TEST_SUITE_P(ExceptionTypeTest, DefaultConstructor, Throw_Correct_Exception, Move_Semantics_Correct);
 
-using DefaultExceptionTypes =
-	::testing::Types<cxxexcept::RuntimeException, cxxexcept::PermissionDeniedException,
-					 cxxexcept::DivideByZeroException, cxxexcept::IOException,
-					 cxxexcept::InvalidArgumentException, cxxexcept::NotImplementedException>;
+using DefaultExceptionTypes = ::testing::Types<cxxexcept::RuntimeException, cxxexcept::PermissionDeniedException,
+											   cxxexcept::DivideByZeroException, cxxexcept::IOException,
+											   cxxexcept::InvalidArgumentException, cxxexcept::NotImplementedException>;
 INSTANTIATE_TYPED_TEST_SUITE_P(DefualtExceptionTypes, ExceptionTypeTest, DefaultExceptionTypes);
 
 using ThrowableExceptionUnicodeTypes =

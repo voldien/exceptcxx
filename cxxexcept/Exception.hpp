@@ -117,6 +117,19 @@ namespace cxxexcept {
 
 		void *getStackStartAddress() const noexcept { return this->stack_start_address; }
 
+		static inline void *getCurrentAddress() noexcept {
+			const static int BT_BUF_SIZE = 100;
+			void *buffer[BT_BUF_SIZE];
+			int nptrs = backtrace(buffer, BT_BUF_SIZE);
+			return buffer[nptrs - 2];
+		}
+		static inline int getStackSize() noexcept {
+			const static int BT_BUF_SIZE = 100;
+			void *buffer[BT_BUF_SIZE];
+			int nptrs = backtrace(buffer, BT_BUF_SIZE);
+			return nptrs;
+		}
+
 	  private:
 		void *stack_start_address;
 	};
@@ -188,9 +201,11 @@ namespace cxxexcept {
 	template <typename Char, class Text = std::basic_string<Char>>
 	class IExceptioBackwardBackTrace : public IExceptionBackTrace<Char> {
 	  public:
-		IExceptioBackwardBackTrace() : IExceptionBackTrace<Char>(nullptr) {
+		IExceptioBackwardBackTrace() : IExceptionBackTrace<Char>(IExceptionBackTrace<Char>::getCurrentAddress()) {
 			this->resolver = std::make_shared<backward::TraceResolver>();
 			this->stackTrace = std::make_shared<backward::StackTrace>();
+			/*	Load Stack.	*/
+			this->loadStack(this->getStackStartAddress(), -1);
 		}
 		virtual ~IExceptioBackwardBackTrace() = default;
 
@@ -208,18 +223,6 @@ namespace cxxexcept {
 		getStackTree(int stackDepth,
 					 StackColorPalette colorPalette = StackColorPalette::StackColorDefault) const noexcept override {
 
-			/*	All.	*/
-			if (stackDepth < 0) {
-				stackDepth = 32;
-			}
-
-			/*	Extract stack.	*/
-			//	int si = stackTrace->load_here(stackDepth);
-			if (this->getStackStartAddress() != nullptr) {
-				stackTrace->load_from(this->getStackStartAddress(), stackDepth);
-			} else {
-				stackTrace->load_here(stackDepth);
-			}
 			resolver->load_stacktrace(*stackTrace);
 
 			/*	Generate the print message.	*/
@@ -230,10 +233,32 @@ namespace cxxexcept {
 			}
 			p.print(*stackTrace, stream);
 
-			/*	*/
+			/*	Generate StackTrace String.	*/
 			std::string stackTraceStr = stream.str();
 			Text stackTracestring(stackTraceStr.begin(), stackTraceStr.end());
 			return stackTracestring;
+		}
+
+	  protected:
+		size_t loadStack(void *address, int32_t stackDepth) {
+
+			if (stackDepth < 0) {
+				stackDepth = 32;
+			}
+			size_t size;
+			if (address) {
+				size = stackTrace->load_from(address, stackDepth);
+				if (size == 0) {
+					size = stackTrace->load_here(stackDepth);
+				}
+			} else {
+				size = stackTrace->load_here(stackDepth);
+			}
+			/*	TODO compute the offset to get the function that invoked throw*/
+			int offset_address = 8;
+			stackTrace->skip_n_firsts(offset_address);
+
+			return size;
 		}
 
 	  private:
