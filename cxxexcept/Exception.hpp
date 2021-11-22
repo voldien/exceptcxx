@@ -69,6 +69,7 @@
 #include <unicode/unistr.h>
 #endif
 
+extern char **environ;
 namespace cxxexcept {
 	// TODO add verison value.
 
@@ -187,7 +188,17 @@ namespace cxxexcept {
 			return Text();
 #endif
 		}
-		static Text getEnviornmentVariables() noexcept { return static_cast<Text>(""); }
+		static Text getEnviornmentVariables() noexcept {
+
+			std::ostringstream stream;
+			for (char **env = environ; *env != nullptr; env++) {
+				char *thisEnv = *env;
+				stream << thisEnv;
+			}
+			std::string stackTraceStr = stream.str();
+			Text stackTracestring(stackTraceStr.begin(), stackTraceStr.end());
+			return stackTracestring;
+		}
 
 	  private:
 	};
@@ -328,12 +339,7 @@ namespace cxxexcept {
 	};
 
 	// TODO rename
-	enum class PrintLevelOfInfo {
-		Minimal,
-		High,
-		Advnaced,
-		UberAdvanced,
-	};
+	enum class PrintLevelOfInfo { Minimal, High, Advnaced, UberAdvanced, Environment = (1 << 8) };
 
 	template <class U> static const char *getExceptionName() noexcept { return typeid(U).name(); }
 
@@ -356,7 +362,9 @@ namespace cxxexcept {
 			if (levelInfo == PrintLevelOfInfo::Minimal) {
 				stream << throwEx->getName() << ": " << throwEx->what() << std::endl;
 			}
-			stream << "Environment Variables: " << ThrowableException<char>::getEnviornmentVariables() << std::endl;
+			if ((unsigned int)levelInfo & (unsigned int)PrintLevelOfInfo::Environment) {
+				stream << "Environment Variables: " << ThrowableException<char>::getEnviornmentVariables() << std::endl;
+			}
 			stream << "Command: " << ThrowableException<char>::getCommandLine() << std::endl;
 
 			/*	If it has a exception backtrace.	*/
