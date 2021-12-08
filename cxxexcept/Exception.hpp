@@ -69,7 +69,6 @@
 #include <unicode/unistr.h>
 #endif
 
-extern char **environ;
 namespace cxxexcept {
 	// TODO add verison value.
 
@@ -257,7 +256,7 @@ namespace cxxexcept {
 				stackDepth = 32;
 			}
 			size_t size;
-			if (address) {
+			if (address != nullptr) {
 				size = stackTrace->load_from(address, stackDepth);
 				if (size == 0) {
 					size = stackTrace->load_here(stackDepth);
@@ -327,11 +326,20 @@ namespace cxxexcept {
 		}
 
 		void setMessage(const Text &text) {
+#ifdef __cpp_constexpr
 			if constexpr (std::is_same<Text, String>::value) {
 				this->message = text;
 			} else {
 				this->message = String(text.begin(), text.end());
 			}
+#else
+			if (std::is_same<Text, String>::value) {
+				Text *pMessg = reinterpret_cast<Text *>(&message);
+				*pMessg = text;
+			} else {
+				this->message = String(text.begin(), text.end());
+			}
+#endif
 		}
 
 	  private:
@@ -362,7 +370,9 @@ namespace cxxexcept {
 			if (levelInfo == PrintLevelOfInfo::Minimal) {
 				stream << throwEx->getName() << ": " << throwEx->what() << std::endl;
 			}
-			if ((unsigned int)levelInfo & (unsigned int)PrintLevelOfInfo::Environment) {
+			bool showEnvVar =
+				static_cast<unsigned int>(levelInfo) & static_cast<unsigned int>(PrintLevelOfInfo::Environment);
+			if (showEnvVar) {
 				stream << "Environment Variables: " << ThrowableException<char>::getEnviornmentVariables() << std::endl;
 			}
 			stream << "Command: " << ThrowableException<char>::getCommandLine() << std::endl;
