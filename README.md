@@ -4,19 +4,20 @@
 [![GitHub release](https://img.shields.io/github/release/voldien/exceptcxx.svg)](https://github.com/voldien/exceptcxx/releases)
 [![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/voldien/exceptcxx.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/voldien/exceptcxx/context:cpp)
 
-A simple library for adding exceptions with additional meta than the common std::exception while preserving the code.
+A simple library for adding universal exceptions more additional meta than the common _std::exception_ while preserving the original code when integrating.
 
 ## Features
 
 * StackTrace - Support to get the stack tree of when it was invoked.
 * Unicode - Allow support for both ASCII, Unicode 8, and unicode 16.
+* Backward compadible with standard exception.
 
 ## Motivation
 
 Attempt to create a dedicated Exception library with useful debug info and stack trace info while maintaining the standard c++ exception. Allowing to reuse the code in multiple projects with a good level of information when the exception is thrown.
 
+## Installation
 
-# Installation
 The library can be built simply by the following commands.
 
 ```bash
@@ -26,8 +27,13 @@ cmake ..
 make
 ```
 
+A note, this exception library is using external submodule git. Use the following command to download all the dependent git repositories.
 
-### Integration with CMake
+```bash
+git submodule update --init --recursive 
+```
+
+## Integration with CMake
 
 The idea is to be able to integrate this library with another project easily. With CMake, it basically requires 2 lines. One for adding the project and the second for adding it as a dependent linked library target.
 
@@ -47,7 +53,7 @@ The dependices currently is related to backward-cpp
 apt install binutils-dev
 ```
 
-# Examples
+## Examples
 
 The following is a simple example for throwing an exception, followed by printing a formated
 error message to stdout.
@@ -55,7 +61,18 @@ error message to stdout.
 ```cpp
 try {
 	throw cxxexcept::DivideByZeroException();
-} catch (cxxexcept::CaptureException &ex) {
+} catch (const std::exception &ex) {
+	cxxexcept::printStackMessage(ex);
+}
+
+```
+
+Another example, using a more common exception type, runtime exception.
+
+```cpp
+try {
+	throw cxxexcept::RuntimeException();
+} catch (const std::exception &ex) {
 	cxxexcept::printStackMessage(ex);
 }
 
