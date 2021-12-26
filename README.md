@@ -77,3 +77,10 @@ try {
 }
 
 ```
+
+Getting a comprehensive string of both the stack as well the cause of exception can be extracted with the following method.
+
+```cpp
+std::cerr << cxxexcept::getStackMessage(ex);
+```
+
