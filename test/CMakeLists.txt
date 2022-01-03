@@ -1,7 +1,3 @@
-# Asserting the functonality.
-#ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/assert)
-
-
 FIND_PACKAGE(GTest QUIET)
 IF(GTEST_FOUND)
 	MESSAGE(STATUS "Gtest found: ${GTEST_BOTH_LIBRARIES}")
@@ -16,10 +12,8 @@ IF(GTEST_FOUND)
 	ADD_TEST(NAME UnitTesting
 		COMMAND exceptionUnitTests)
 
-
 	ADD_EXECUTABLE(exceptionTest throwExecption.cpp)
 	TARGET_LINK_LIBRARIES(exceptionTest cxxexcept dl)
-
 
 ELSE()
 	MESSAGE(WARNING "Gtest is required in order to compile and run the tests")

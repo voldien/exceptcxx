@@ -234,6 +234,9 @@ namespace cxxexcept {
 					 StackColorPalette colorPalette = StackColorPalette::StackColorDefault) const noexcept override {
 
 			resolver->load_stacktrace(*stackTrace);
+			
+			//TODO resolve what do to with it
+			(void)stackDepth;
 
 			/*	Generate the print message.	*/
 			std::ostringstream stream;

@@ -14,11 +14,6 @@ SET(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib CACHE INTERNAL "" FORCE)
 # Build shared/dynamic library option
 OPTION(CXXEXCEPT_BUILD_SHARED_LIBS "Build package with shared libraries." ON)
 OPTION(CXXEXCEPT_BUILD_WITH_EXTERNAL_PROJECT "Enable external project build." ON)
-OPTION(CXXEXCEPT_BUILD_WITH_INSTALL "Disable this if you want to use a submodule." ON )
-
-OPTION(CXXEXCEPT_BUILD_WITH_ASAN "Enable AddressSanitizer." OFF )
-OPTION(CXXEXCEPT_BUILD_WITH_UBSAN "Enable Undefined Behavior sanitizer." OFF )
-OPTION(CXXEXCEPT_BUILD_WITH_TSAN "Enable Thread sanitizer" OFF)
 
 OPTION(CXXEXCEPT_BUILD_OPT_BUILD_PACKAGES "Set to ON to generate CPack configuration files and packaging targets" OFF)
 
@@ -81,10 +76,9 @@ SET(LIBCXXEXCEPT-DEV_COMPONENT "LIBCXXEXCEPT{VERSION_MAJOR}.${VERSION_MINOR}.${V
 
 SET(CPACK_COMPONENTS_ALL ${LIBCXXEXCEPT_COMPONENT} ${LIBCXXEXCEPT-DEV_COMPONENT} )
 
-
-#-----------------------------------------------------------------------------
+#####################################
 # Compiler toolchain
-
+#####################################
 IF(MSVC)
   OPTION( CXXEXCEPT_BUILD_INSTALL_PDB
 	"Install MSVC debug files."
@@ -96,69 +90,13 @@ IF(MSVC)
   ENDIF()
 ENDIF()
 
-
-IF(CMAKE_COMPILER_IS_GNUCC)
-	OPTION(WITH_LINKER_GOLD "Use ld.gold linker which is usually faster than ld.bfd" ON)
-	MARK_AS_ADVANCED(WITH_LINKER_GOLD)
-	OPTION(WITH_LINKER_LLD "Use ld.lld linker which is usually faster than ld.gold" OFF)
-	mark_as_advanced(WITH_LINKER_LLD)
-ENDIF()
-
 # GCC compiler flag options.
 IF((CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX) AND NOT CMAKE_COMPILER_IS_MINGW)
-	IF (BUILD_SHARED_LIBS AND CMAKE_SIZEOF_VOID_P EQUAL 8) # -fPIC is only required
-		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
-	ENDIF()
-
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -Wpedantic -Wextra  -Wall -Wno-attributes")
 
 	IF (CMAKE_BUILD_TYPE STREQUAL "Release")
-		MESSAGE(STATUS "Compile for release.")
-		ADD_DEFINITIONS(-DNDEBUG=1)
-		ADD_DEFINITIONS(-O3)
-		SET(CMAKE_RELEASE TRUE)
-		SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
 	ELSE()
-		MESSAGE(STATUS "Compile for debug.")
-		ADD_DEFINITIONS(-D_DEBUG)
-		ADD_DEFINITIONS(-g3 -O0)
-		SET(CMAKE_DEBUG TRUE)
 		ADD_DEFINITIONS(-D_GLIBCXX_ASSERTIONS)
-	ENDIF()
-
-	#
-	IF(CXXEXCEPT_BUILD_WITH_COVERAGE)
-		MESSAGE(STATUS "Building with coverage")
-		SET(GCC_COVERAGE_COMPILE_FLAGS "--coverage -fprofile-arcs -ftest-coverage")
-		SET(GCC_COVERAGE_LINK_FLAGS    "-lgcov")
-		SET(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
-		SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
-		SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}")
-	ENDIF()
-
-	#
-	IF(CXXEXCEPT_BUILD_WITH_PROFILER)
-		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
-		SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pg")
-		SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -pg")
-	ENDIF()
-
-	#
-	IF (CXXEXCEPT_BUILD_WITH_UBSAN)
-		MESSAGE(STATUS "Undefined Behavior sanitizer enabled")
-		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined,shift,shift-exponent,integer-divide-by-zero,unreachable,vla-bound,null,return,signed-integer-overflow,bounds,float-divide-by-zero,float-cast-overflow,nonnull-attribute,returns-nonnull-attribute,bool,enum,vptr,pointer-overflow,builtin -fno-sanitize-recover=all")
-		SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=undefined,shift,shift-exponent,integer-divide-by-zero,unreachable,vla-bound,null,return,signed-integer-overflow,bounds,float-divide-by-zero,float-cast-overflow,nonnull-attribute,returns-nonnull-attribute,bool,enum,vptr,pointer-overflow,builtin -fno-sanitize-recover=all")
-	ENDIF()
-
-ELSEIF ( "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" )
-	SET(CMAKE_CXX_FLAGS "-fvisibility=hidden -fno-strict-aliasing -Wall -Wno-long-long ${CMAKE_CXX_FLAGS}" )
-	SET(CMAKE_C_FLAGS "-fno-strict-aliasing ${CMAKE_C_FLAGS}")
-
-	#
-	IF (CXXEXCEPT_BUILD_WITH_ASAN)
-		MESSAGE(STATUS "AddressSanitizer enabled")
-		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
-		SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address")
 	ENDIF()
 
 ELSEIF(MSVC)
@@ -168,24 +106,8 @@ ELSEIF(MSVC)
 	ELSE() # msvc
 		ADD_COMPILE_OPTIONS(/MP /bigobj /W4)
 	ENDIF()
-	IF(NOT (MSVC_VERSION LESS 1900))
-		# Multibyte character set is deprecated since at least MSVC2015 (possibly earlier)
-		ADD_DEFINITIONS( -DUNICODE -D_UNICODE )
-	ENDIF()
-
-	SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /D_DEBUG /Zi /Od")
-
-ELSEIF ( "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" )
-	SET(CMAKE_CXX_FLAGS "-g -fvisibility=hidden -fno-strict-aliasing -Wall -Wno-long-long ${CMAKE_CXX_FLAGS}" )
-	SET(CMAKE_C_FLAGS "-fno-strict-aliasing ${CMAKE_C_FLAGS}")
-ELSEIF( CMAKE_COMPILER_IS_MINGW )
-	SET(CMAKE_CXX_FLAGS "-fvisibility=hidden -fno-strict-aliasing -Wall -Wno-long-long -Wa,-mbig-obj ${CMAKE_CXX_FLAGS}")
-	SET(CMAKE_C_FLAGS "-fno-strict-aliasing ${CMAKE_C_FLAGS}")
-	ADD_DEFINITIONS( -U__STRICT_ANSI__ )
-ELSE()
 
 ENDIF()
-
 
 
 
@@ -195,9 +117,9 @@ IF(CXXEXCEPT_BUILD_WITH_EXTERNAL_PROJECT)
 ENDIF(CXXEXCEPT_BUILD_WITH_EXTERNAL_PROJECT)
 
 
-#-----------------------------------------------------------------------------
+############################################
 # Exception Library Target.
-
+############################################
 SET(CXXEXCEPT_SOURCE_FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/cxxexcept/Exception.hpp
 )
@@ -226,10 +148,11 @@ IF(CXXEXCEPT_BUILD_WITH_TEST)
 	ENABLE_TESTING()
 	ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/test)
 ENDIF()
-
+###############################
 # Generate documentations.
+###############################
 IF(CXXEXCEPT_BUILD_WITH_DOCS)
-	ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/docs/)
+	#ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/docs/)
 ENDIF(CXXEXCEPT_BUILD_WITH_DOCS)
 
 
