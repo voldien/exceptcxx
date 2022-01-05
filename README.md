@@ -78,6 +78,13 @@ try {
 }
 
 ```
+
+Getting a comprehensive string of both the stack as well the cause of exception can be extracted with the following method.
+
+```cpp
+std::cerr << cxxexcept::getStackMessage(ex);
+```
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
