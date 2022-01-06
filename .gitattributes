@@ -38,3 +38,5 @@
 
 *.otf   binary
 *.tff   binary
+
+*.cmake linguist-detectable=false
