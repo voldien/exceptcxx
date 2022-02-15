@@ -74,7 +74,7 @@ jobs:
         - os: ubuntu-18.04
           platform: x32
           compiler: gcc
-    name: C++ Exception Library - Linux (${{matrix.os}})
+    name: C++ Exception Library - Linux (${{matrix.os}}, ${{matrix.platform}}, ${{matrix.compiler}})
     steps:
       - uses: actions/checkout@v2
         with:
