@@ -31,7 +31,6 @@
 #include <cerrno>
 #include <cstring>
 #include <cxxabi.h>
-#include <execinfo.h>
 #include <fmt/format.h>
 #include <limits>
 #include <memory>
@@ -63,6 +62,9 @@
 #endif
 
 #ifdef __ANDROID__
+
+#else
+
 #endif
 
 #ifdef CXXEXCEPT_USE_UNICODE
@@ -118,16 +120,24 @@ namespace cxxexcept {
 		void *getStackStartAddress() const noexcept { return this->stack_start_address; }
 
 		static inline void *getCurrentAddress() noexcept {
+#ifdef BACKWARD_HAS_BACKTRACE_SYMBOL
 			const static int BT_BUF_SIZE = 100;
 			void *buffer[BT_BUF_SIZE];
 			int nptrs = backtrace(buffer, BT_BUF_SIZE);
 			return buffer[nptrs - 2];
+#else
+			return nullptr;
+#endif
 		}
 		static inline int getStackSize() noexcept {
+#ifdef BACKWARD_HAS_BACKTRACE_SYMBOL
 			const static int BT_BUF_SIZE = 100;
 			void *buffer[BT_BUF_SIZE];
 			int nptrs = backtrace(buffer, BT_BUF_SIZE);
 			return nptrs;
+#else
+			return 0;
+#endif
 		}
 
 	  private:
@@ -234,8 +244,8 @@ namespace cxxexcept {
 					 StackColorPalette colorPalette = StackColorPalette::StackColorDefault) const noexcept override {
 
 			resolver->load_stacktrace(*stackTrace);
-			
-			//TODO resolve what do to with it
+
+			// TODO resolve what do to with it
 			(void)stackDepth;
 
 			/*	Generate the print message.	*/

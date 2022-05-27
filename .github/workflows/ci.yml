@@ -201,6 +201,11 @@ jobs:
         with:
           submodules: "recursive"
 
+      - name: Configure dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install cmake g++ libfmt-dev binutils-dev libgtest-dev googletest
+
       - name: Install Android NDK r21
         run: |
           sudo ${ANDROID_HOME}/tools/bin/sdkmanager --install 'ndk;${{env.ANDROID_NDK_VERSION}}'
