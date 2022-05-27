@@ -120,7 +120,7 @@ namespace cxxexcept {
 		void *getStackStartAddress() const noexcept { return this->stack_start_address; }
 
 		static inline void *getCurrentAddress() noexcept {
-#ifdef BACKWARD_HAS_BACKTRACE_SYMBOL
+#if BACKWARD_HAS_BACKTRACE_SYMBOL == 1
 			const static int BT_BUF_SIZE = 100;
 			void *buffer[BT_BUF_SIZE];
 			int nptrs = backtrace(buffer, BT_BUF_SIZE);
@@ -130,7 +130,7 @@ namespace cxxexcept {
 #endif
 		}
 		static inline int getStackSize() noexcept {
-#ifdef BACKWARD_HAS_BACKTRACE_SYMBOL
+#if BACKWARD_HAS_BACKTRACE_SYMBOL == 1
 			const static int BT_BUF_SIZE = 100;
 			void *buffer[BT_BUF_SIZE];
 			int nptrs = backtrace(buffer, BT_BUF_SIZE);
