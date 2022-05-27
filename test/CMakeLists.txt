@@ -8,6 +8,7 @@ IF(GTEST_FOUND)
 		COMPILE_FLAGS " -Wpedantic -Wextra  -Wall -Wno-attributes")
 	ADD_DEPENDENCIES(exceptionUnitTests cxxexcept)
 
+	TARGET_COMPILE_FEATURES(exceptionUnitTests PRIVATE cxx_std_17)
 
 	ADD_TEST(NAME UnitTesting
 		COMMAND exceptionUnitTests)

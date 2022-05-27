@@ -141,7 +141,7 @@ namespace cxxexcept {
 		}
 
 	  private:
-		void *stack_start_address;
+		void *stack_start_address = nullptr;
 	};
 
 	/**
