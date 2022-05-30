@@ -152,7 +152,6 @@ TARGET_COMPILE_DEFINITIONS(cxxexcept INTERFACE CXXE_VERSION="${CXXEXCEPT_PROJECT
 TARGET_LINK_LIBRARIES(cxxexcept INTERFACE backward dl fmt ${BACKWARD_LIBRARIES})
 
 # # Install the header file and export the target
-#install(TARGETS cxxexcept EXPORT ${targets_export_name} DESTINATION lib)
 INSTALL(FILES ${PROJECT_SOURCE_DIR}/cxxexcept/Exception.hpp DESTINATION include)
 
 IF(CXXEXCEPT_BUILD_WITH_TEST)

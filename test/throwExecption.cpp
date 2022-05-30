@@ -4,7 +4,7 @@
 int main(int argc, const char **argv) {
 	try {
 		throw cxxexcept::RuntimeException("{}", "Error Message");
-	} catch (cxxexcept::CaptureException &ex) {
+	} catch (const cxxexcept::CaptureException &ex) {
 		std::cerr << cxxexcept::getStackMessage(ex);
 	}
 }

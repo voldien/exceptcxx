@@ -87,7 +87,7 @@ TEST_P(ExceptionNameTest, Names) {
 
 	try {
 		throwException(expected);
-	} catch (std::exception &ex) {
+	} catch (const std::exception &ex) {
 		ex.what();
 		/*	*/
 		cxxexcept::ThrowableException<cxxexcept::ExceptionChar> &throwable =
