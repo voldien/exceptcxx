@@ -2,7 +2,6 @@
 [![ExceptCxx](https://github.com/voldien/exceptcxx/actions/workflows/ci.yml/badge.svg)](https://github.com/voldien/exceptcxx/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub release](https://img.shields.io/github/release/voldien/exceptcxx.svg)](https://github.com/voldien/exceptcxx/releases)
-[![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/voldien/exceptcxx.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/voldien/exceptcxx/context:cpp)
 
 A simple library for adding universal exceptions more additional meta than the common _std::exception_ while preserving the original code when integrating.
 
