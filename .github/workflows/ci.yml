@@ -191,39 +191,3 @@ jobs:
         # Execute tests defined by the CMake configuration.
         # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
         run: ctest -C $BUILD_TYPE --output-on-failure --verbose
-
-  Android:
-    runs-on: ubuntu-latest
-    name: "C++ Exception Library - Android"
-
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: "recursive"
-
-      - name: Install Android NDK r21
-        run: |
-          sudo ${ANDROID_HOME}/tools/bin/sdkmanager --install 'ndk;${{env.ANDROID_NDK_VERSION}}'
-
-      - name: Set up Java 11
-        uses: actions/setup-java@v1
-        with:
-          java-version: 11
-
-      - name: Create Build Environment
-
-        env:
-          ANDROID_NDK_ROOT: /usr/local/lib/android/sdk/ndk/${{env.ANDROID_NDK_VERSION}}/
-        run: cmake -E make_directory ${{runner.workspace}}/build 
-      - name: Configure CMake
-
-        shell: bash
-        working-directory: ${{runner.workspace}}/build
-
-        run: cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_ROOT/build/cmake/android.toolchain.cmake \
-          -DANDROID_NDK=$ANDROID_NDK_ROOT -DANDROID_ABI="armeabi-v7a"  -DANDROID_PLATFORM=android-16  $GITHUB_WORKSPACE
-
-      - name: Build Library
-        working-directory: ${{runner.workspace}}/build
-        shell: bash
-        run: cmake --build . --config $BUILD_TYPE
