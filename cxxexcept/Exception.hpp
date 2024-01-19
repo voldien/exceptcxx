@@ -27,6 +27,7 @@
 #endif
 
 #include <cstdlib>
+#include <iostream>
 // TODO check if conditional.
 #include <cerrno>
 #include <cstring>
@@ -178,11 +179,11 @@ namespace cxxexcept {
 		static Text getCommandLine() noexcept {
 #ifdef CXXEXCEPT_UNIX
 
-			String c;
+			String cmd_output;
 			std::ifstream cmd("/proc/self/cmdline");
-			std::getline(cmd, c);
+			std::getline(cmd, cmd_output);
 			cmd.close();
-			return Text(c.begin(), c.end());
+			return Text(cmd_output.begin(), cmd_output.end());
 #else
 			return Text();
 #endif
@@ -217,7 +218,7 @@ namespace cxxexcept {
 			/*	Load Stack.	*/
 			this->loadStack(this->getStackStartAddress(), -1);
 		}
-		virtual ~IExceptioBackwardBackTrace() = default;
+		~IExceptioBackwardBackTrace() override = default;
 
 		IExceptioBackwardBackTrace(const IExceptioBackwardBackTrace &other) = default;
 		IExceptioBackwardBackTrace &operator=(const IExceptioBackwardBackTrace &other) = default;
@@ -234,17 +235,17 @@ namespace cxxexcept {
 					 StackColorPalette colorPalette = StackColorPalette::StackColorDefault) const noexcept override {
 
 			resolver->load_stacktrace(*stackTrace);
-			
-			//TODO resolve what do to with it
+
+			// TODO resolve what do to with it
 			(void)stackDepth;
 
 			/*	Generate the print message.	*/
 			std::ostringstream stream;
-			backward::Printer p;
+			backward::Printer printer;
 			if (colorPalette == StackColorPalette::StackColorDefault) {
-				p.color_mode = backward::ColorMode::type::always;
+				printer.color_mode = backward::ColorMode::type::always;
 			}
-			p.print(*stackTrace, stream);
+			printer.print(*stackTrace, stream);
 
 			/*	Generate StackTrace String.	*/
 			std::string stackTraceStr = stream.str();
@@ -312,20 +313,20 @@ namespace cxxexcept {
 
 		const char *what() const noexcept override { return message.c_str(); }
 
-		friend std::ostream &operator<<(std::ostream &os, const StackException &exception) {
-			os << exception.what();
-			return os;
+		friend std::ostream &operator<<(std::ostream &outStream, const StackException &exception) {
+			outStream << exception.what();
+			return outStream;
 		}
 
 	  protected:
 	  public:
-		template <class U> static std::ostream &printStackMessage(const U &ex, std::ostream &o) noexcept {
-			o << ex.what() << ex.getStackTree();
-			return o;
+		template <class U> static std::ostream &printStackMessage(const U &exception, std::ostream &outStream) noexcept {
+			outStream << exception.what() << exception.getStackTree();
+			return outStream;
 		}
-		template <class U> static void printStackMessage(const U &ex) noexcept {
-			printStackMessage(ex, std::cout);
-			std::cout << ex.what() << ex.getStackTree();
+		template <class U> static void printStackMessage(const U &exception) noexcept {
+			printStackMessage(exception, std::cout);
+			std::cout << exception.what() << exception.getStackTree();
 		}
 
 		void setMessage(const Text &text) {
@@ -362,10 +363,10 @@ namespace cxxexcept {
 	 * @param levelInfo
 	 */
 	template <class U>
-	static String getStackMessage(const U &ex, PrintLevelOfInfo levelInfo = PrintLevelOfInfo::Minimal) noexcept {
+	static String getStackMessage(const U &exception, PrintLevelOfInfo levelInfo = PrintLevelOfInfo::Minimal) noexcept {
 		static_assert(std::is_base_of<std::exception, U>::value, "Class Must be derived from std::exception");
-		const ThrowableException<char> *throwEx = dynamic_cast<const ThrowableException<ExceptionChar> *>(&ex);
-		const IExceptionBackTrace<char> *stackEx = dynamic_cast<const IExceptionBackTrace<char> *>(&ex);
+		const ThrowableException<char> *throwEx = dynamic_cast<const ThrowableException<ExceptionChar> *>(&exception);
+		const IExceptionBackTrace<char> *stackEx = dynamic_cast<const IExceptionBackTrace<char> *>(&exception);
 		std::basic_ostringstream<char> stream;
 
 		/*	If */
@@ -386,7 +387,7 @@ namespace cxxexcept {
 			}
 		} else {
 			/*	A normal std::exception.	*/
-			stream << ex.what();
+			stream << exception.what();
 		}
 
 		return stream.str();
@@ -398,13 +399,15 @@ namespace cxxexcept {
 	 * @tparam T
 	 * @param ex
 	 */
-	template <class T> static void printStackMessage(const T &ex) noexcept { std::cerr << getStackMessage<T>(ex); }
+	template <class T> static void printStackMessage(const T &exception) noexcept {
+		std::cerr << getStackMessage<T>(exception);
+	}
 
 	using CaptureException = ThrowableException<ExceptionChar>;
 
 	class RuntimeException : public StackException<> {
 	  public:
-		RuntimeException() : StackException("RuntimeException") {}
+		RuntimeException() : StackException<>("RuntimeException") {}
 		RuntimeException(RuntimeException &&other) = default;
 		RuntimeException(const DefaultExcepCXXString &arg) : StackException(arg) {}
 		template <typename... Args>
@@ -420,8 +423,11 @@ namespace cxxexcept {
 		PermissionDeniedException(const DefaultExcepCXXString &format, Args &&... args)
 			: StackException(format, args...) {}
 	};
+
 	class DivideByZeroException : public StackException<> {};
+
 	class IOException : public StackException<> {};
+
 	class InvalidArgumentException : public StackException<> {
 	  public:
 		InvalidArgumentException() : StackException("Invalid Argument") {}
@@ -431,6 +437,7 @@ namespace cxxexcept {
 		InvalidArgumentException(const DefaultExcepCXXString &format, Args &&... args)
 			: StackException(format, args...) {}
 	};
+
 	class NotImplementedException : public StackException<> {};
 	class NotSupportedException : public StackException<> {
 	  public:
@@ -440,6 +447,7 @@ namespace cxxexcept {
 		template <typename... Args>
 		NotSupportedException(const DefaultExcepCXXString &format, Args &&... args) : StackException(format, args...) {}
 	};
+
 	class IndexOutOfRangeException : public StackException<> {
 	  public:
 		IndexOutOfRangeException() : StackException("IndexOutOfRangeException") {}
@@ -449,6 +457,7 @@ namespace cxxexcept {
 		IndexOutOfRangeException(const DefaultExcepCXXString &format, Args &&... args)
 			: StackException(format, args...) {}
 	};
+
 	class InvalidPointerException : public StackException<> {
 	  public:
 		InvalidPointerException() : StackException("IndexOutOfRangeException") {}
@@ -479,9 +488,7 @@ namespace cxxexcept {
 
 	  protected:
 		void generateMessage(const ExceptionText &text, const std::error_category &ecat) {
-			errorMessage =
-
-				fmt::format("{} {} {}", text, ecat.name(), errnoStrMsg);
+			errorMessage = fmt::format("{} {} {}", text, ecat.name(), errnoStrMsg);
 		}
 		String errorMessage;
 		const char *errnoStrMsg;
