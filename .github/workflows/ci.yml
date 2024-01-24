@@ -9,51 +9,6 @@ env:
   ANDROID_NDK_VERSION: 21.4.7075529
 
 jobs:
-  macos:
-    name: "macOS amd64 ${{matrix.cfg.name}}"
-    runs-on: ${{matrix.cfg.os}}
-    strategy:
-      fail-fast: false
-      matrix:
-        cfg:
-          - { os: macos-10.15,  name: "Catalina", dist: true}
-          - { os: macos-11,     name: "Big Sur",  dist: false}
-
-    steps:
-      - name : ExceptCXX Checkout
-        uses: actions/checkout@v2
-        with:
-          submodules: "recursive"
-
-      - name: Install homebrew packages
-        run: brew install cmake fmt binutils
-
-      - name: Create Build Environment
-        run: cmake -E make_directory ${{runner.workspace}}/build
-
-      - name: Configure CMake
-        # Use a bash shell so we can use the same syntax for environment variable
-        # access regardless of the host operating system
-        shell: bash
-        working-directory: ${{runner.workspace}}/build
-        # Note the current convention is to use the -S and -B options here to specify source 
-        # and build directories, but this is only available with CMake 3.13 and higher.  
-        # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
-        run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCXXEXCEPT_BUILD_WITH_TEST=ON
-
-      - name: Build Library
-        working-directory: ${{runner.workspace}}/build
-        shell: bash
-        # Execute the build.  You can specify a specific target with "--target <NAME>"
-        run: cmake --build . --config $BUILD_TYPE
-
-      - name: Test
-        working-directory: ${{runner.workspace}}/build
-        shell: bash
-        # Execute tests defined by the CMake configuration.
-        # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-        run: ctest -C $BUILD_TYPE --output-on-failure --verbose
-      
   linux:
     runs-on: ${{ matrix.os }}
     strategy:
