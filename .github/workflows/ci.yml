@@ -17,19 +17,6 @@ jobs:
         platform: [x32, x64]
         compiler: [gcc, clang]
         flavor: [ RelWithDebInfo, Coverage ]
-        include:
-        - os: ubuntu-18.04
-          platform: x64
-          compiler: clang
-        - os: ubuntu-18.04
-          platform: x32
-          compiler: clang
-        - os: ubuntu-18.04
-          platform: x64
-          compiler: gcc
-        - os: ubuntu-18.04
-          platform: x32
-          compiler: gcc
     name: C++ Exception Library - Linux (${{matrix.os}}, ${{matrix.platform}}, ${{matrix.compiler}})
     steps:
       - uses: actions/checkout@v2
