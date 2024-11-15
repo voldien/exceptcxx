@@ -1,4 +1,5 @@
 # ExecptCXX
+
 [![ExceptCxx](https://github.com/voldien/exceptcxx/actions/workflows/ci.yml/badge.svg)](https://github.com/voldien/exceptcxx/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub release](https://img.shields.io/github/release/voldien/exceptcxx.svg)](https://github.com/voldien/exceptcxx/releases)
@@ -59,9 +60,9 @@ error message to stdout.
 
 ```cpp
 try {
-	throw cxxexcept::DivideByZeroException();
+    throw cxxexcept::DivideByZeroException();
 } catch (const std::exception &ex) {
-	cxxexcept::printStackMessage(ex);
+    cxxexcept::printStackMessage(ex);
 }
 
 ```
@@ -70,9 +71,9 @@ Another example, using a more common exception type, runtime exception.
 
 ```cpp
 try {
-	throw cxxexcept::RuntimeException();
+    throw cxxexcept::RuntimeException();
 } catch (const std::exception &ex) {
-	cxxexcept::printStackMessage(ex);
+     cxxexcept::printStackMessage(ex);
 }
 
 ```
