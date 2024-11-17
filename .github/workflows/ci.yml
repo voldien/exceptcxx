@@ -6,7 +6,6 @@ on:
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
-  ANDROID_NDK_VERSION: 21.4.7075529
 
 jobs:
   linux:
@@ -19,7 +18,7 @@ jobs:
         flavor: [ RelWithDebInfo, Coverage ]
     name: C++ Exception Library - Linux (${{matrix.os}}, ${{matrix.platform}}, ${{matrix.compiler}})
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: "recursive"
 
