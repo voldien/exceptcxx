@@ -8,3 +8,4 @@ int main(int argc, const char **argv) {
 		std::cerr << cxxexcept::getStackMessage(ex);
 	}
 }
+

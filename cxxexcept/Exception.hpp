@@ -34,10 +34,8 @@
 #include <cxxabi.h>
 #include <execinfo.h>
 #include <fmt/format.h>
-#include <limits>
 #include <memory>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <typeinfo>
@@ -118,13 +116,13 @@ namespace cxxexcept {
 
 		void *getStackStartAddress() const noexcept { return this->stack_start_address; }
 
-		static inline void *getCurrentAddress() noexcept {
+		static  void *getCurrentAddress() noexcept {
 			const static int BT_BUF_SIZE = 100;
 			void *buffer[BT_BUF_SIZE];
 			int nptrs = backtrace(buffer, BT_BUF_SIZE);
 			return buffer[nptrs - 2];
 		}
-		static inline int getStackSize() noexcept {
+		static  int getStackSize() noexcept {
 			const static int BT_BUF_SIZE = 100;
 			void *buffer[BT_BUF_SIZE];
 			int nptrs = backtrace(buffer, BT_BUF_SIZE);
@@ -243,6 +241,10 @@ namespace cxxexcept {
 			std::ostringstream stream;
 			backward::Printer printer;
 			if (colorPalette == StackColorPalette::StackColorDefault) {
+				printer.color_mode = backward::ColorMode::type::automatic;
+			} else if (colorPalette == StackColorPalette::StackColorNone) {
+				printer.color_mode = backward::ColorMode::type::never;
+			} else {
 				printer.color_mode = backward::ColorMode::type::always;
 			}
 			printer.print(*stackTrace, stream);
@@ -290,10 +292,10 @@ namespace cxxexcept {
 	template <typename Char = ExceptionChar, class Text = std::basic_string<Char>,
 			  class BackTrace = ExceptionDefaultBackStackImpl<Char>>
 	class StackException : public ThrowableException<Char>, public BackTrace {
-		static_assert(std::is_object<Text>::value, "");
+		static_assert(std::is_object<Text>::value, "Invalid");
 		static_assert(std::is_base_of<IExceptionBackTrace<Char>, BackTrace>::value, "BackTrace Class be ");
-		static_assert(std::is_base_of<Text, std::basic_string<Char>>::value, "");
-		// TODO assert the backstrace impl class typr and etc.
+		static_assert(std::is_base_of<Text, std::basic_string<Char>>::value, "Invalid");
+		// TODO assert the backstrace impl class type and etc.
 
 	  public:
 		StackException() {
@@ -304,7 +306,7 @@ namespace cxxexcept {
 		StackException(const Text &what) : StackException() { this->setMessage(what); }
 		StackException(Text &&what) : StackException() { this->setMessage(what); }
 		template <typename... Args>
-		StackException(const Text &format, Args &&... args) : StackException(std::move(fmt::format(format, args...))) {}
+		StackException(const Text &format, Args &&...args) : StackException(std::move(fmt::format(format, args...))) {}
 
 		StackException(const StackException &) = default;
 		StackException &operator=(const StackException &) = default;
@@ -320,7 +322,8 @@ namespace cxxexcept {
 
 	  protected:
 	  public:
-		template <class U> static std::ostream &printStackMessage(const U &exception, std::ostream &outStream) noexcept {
+		template <class U>
+		static std::ostream &printStackMessage(const U &exception, std::ostream &outStream) noexcept {
 			outStream << exception.what() << exception.getStackTree();
 			return outStream;
 		}
@@ -351,7 +354,7 @@ namespace cxxexcept {
 	};
 
 	// TODO rename
-	enum class PrintLevelOfInfo { Minimal, High, Advnaced, UberAdvanced, Environment = (1 << 8) };
+	enum class PrintLevelOfInfo { Minimal = 0, High = 1, Advanced = 2, UberAdvanced = 3, Environment = (1 << 8) };
 
 	template <class U> static const char *getExceptionName() noexcept { return typeid(U).name(); }
 
@@ -383,7 +386,7 @@ namespace cxxexcept {
 
 			/*	If it has a exception backtrace.	*/
 			if (stackEx) {
-				stream << std::endl << stackEx->getBackTrace();
+				stream << std::endl << stackEx->getBackTrace(StackColorPalette::StackColorDefault);
 			}
 		} else {
 			/*	A normal std::exception.	*/
@@ -411,7 +414,7 @@ namespace cxxexcept {
 		RuntimeException(RuntimeException &&other) = default;
 		RuntimeException(const DefaultExcepCXXString &arg) : StackException(arg) {}
 		template <typename... Args>
-		RuntimeException(const DefaultExcepCXXString &format, Args &&... args) : StackException(format, args...) {}
+		RuntimeException(const DefaultExcepCXXString &format, Args &&...args) : StackException(format, args...) {}
 	};
 
 	class PermissionDeniedException : public StackException<> {
@@ -420,7 +423,7 @@ namespace cxxexcept {
 
 		PermissionDeniedException(const DefaultExcepCXXString &arg) : StackException(arg) {}
 		template <typename... Args>
-		PermissionDeniedException(const DefaultExcepCXXString &format, Args &&... args)
+		PermissionDeniedException(const DefaultExcepCXXString &format, Args &&...args)
 			: StackException(format, args...) {}
 	};
 
@@ -434,7 +437,7 @@ namespace cxxexcept {
 		InvalidArgumentException(InvalidArgumentException &&other) = default;
 		InvalidArgumentException(const DefaultExcepCXXString &message) : StackException(message) {}
 		template <typename... Args>
-		InvalidArgumentException(const DefaultExcepCXXString &format, Args &&... args)
+		InvalidArgumentException(const DefaultExcepCXXString &format, Args &&...args)
 			: StackException(format, args...) {}
 	};
 
@@ -445,7 +448,7 @@ namespace cxxexcept {
 		NotSupportedException(NotSupportedException &&other) = default;
 		NotSupportedException(const DefaultExcepCXXString &message) : StackException(message) {}
 		template <typename... Args>
-		NotSupportedException(const DefaultExcepCXXString &format, Args &&... args) : StackException(format, args...) {}
+		NotSupportedException(const DefaultExcepCXXString &format, Args &&...args) : StackException(format, args...) {}
 	};
 
 	class IndexOutOfRangeException : public StackException<> {
@@ -454,7 +457,7 @@ namespace cxxexcept {
 		IndexOutOfRangeException(IndexOutOfRangeException &&other) = default;
 		IndexOutOfRangeException(const DefaultExcepCXXString &message) : StackException(message) {}
 		template <typename... Args>
-		IndexOutOfRangeException(const DefaultExcepCXXString &format, Args &&... args)
+		IndexOutOfRangeException(const DefaultExcepCXXString &format, Args &&...args)
 			: StackException(format, args...) {}
 	};
 
@@ -464,7 +467,7 @@ namespace cxxexcept {
 		InvalidPointerException(InvalidPointerException &&other) = default;
 		InvalidPointerException(const DefaultExcepCXXString &message) : StackException(message) {}
 		template <typename... Args>
-		InvalidPointerException(const DefaultExcepCXXString &format, Args &&... args)
+		InvalidPointerException(const DefaultExcepCXXString &format, Args &&...args)
 			: StackException(format, args...) {}
 	};
 
@@ -477,7 +480,7 @@ namespace cxxexcept {
 		SystemException(const ExceptionText &message) : StackException(message) {}
 		template <typename... Args>
 		SystemException(int errno_nr, const std::error_category &ecat, const DefaultExcepCXXString &format,
-						Args &&... args)
+						Args &&...args)
 			: StackException(format, args...) {
 			this->errnoStrMsg = std::strerror(errno_nr);
 			// Generate message based on the error values.

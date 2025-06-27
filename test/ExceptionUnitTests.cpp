@@ -69,16 +69,17 @@ INSTANTIATE_TYPED_TEST_SUITE_P(ExceptionTypeTestSS, ExceptionTypeTest, Throwable
 class ExceptionNameTest : public ::testing::TestWithParam<std::tuple<std::string>> {
   public:
 	void throwException(const std::string &name) {
-		if (name == "RuntimeException")
+		if (name == "RuntimeException") {
 			throw cxxexcept::RuntimeException();
-		else if (name == "PermissionDeniedException")
+		} if (name == "PermissionDeniedException") {
 			throw cxxexcept::PermissionDeniedException();
-		else if (name == "DivideByZeroException")
+		} if (name == "DivideByZeroException") {
 			throw cxxexcept::DivideByZeroException();
-		else if (name == "IOException")
+		} if (name == "IOException") {
 			throw cxxexcept::IOException();
-		else if (name == "NotImplementedException")
+		} if (name == "NotImplementedException") {
 			throw cxxexcept::NotImplementedException();
+}
 	}
 };
 
@@ -99,3 +100,4 @@ TEST_P(ExceptionNameTest, Names) {
 
 INSTANTIATE_TEST_SUITE_P(ThrowException, ExceptionNameTest,
 						 ::testing::Values(std::make_tuple("cxxexcept::RuntimeException")));
+
